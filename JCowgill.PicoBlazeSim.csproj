@@ -44,7 +44,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Instructions\Binary.cs" />
+    <Compile Include="Instructions\BinaryConstant.cs" />
+    <Compile Include="Instructions\BinaryRegister.cs" />
+    <Compile Include="Instructions\BinaryType.cs" />
+    <Compile Include="Instructions\Conditional.cs" />
+    <Compile Include="Instructions\ConditionType.cs" />
+    <Compile Include="Instructions\JumpCall.cs" />
+    <Compile Include="Instructions\Return.cs" />
+    <Compile Include="Instructions\ReturnInterrupt.cs" />
+    <Compile Include="Instructions\SetInterruptFlag.cs" />
+    <Compile Include="Instructions\ShiftType.cs" />
+    <Compile Include="Instructions\Shift.cs" />
+    <Compile Include="IInstruction.cs" />
+    <Compile Include="IInstructionVisitor.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Export\" />
+    <Folder Include="Import\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

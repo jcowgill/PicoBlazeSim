@@ -10,9 +10,9 @@ namespace JCowgill.PicoBlazeSim
     public class Program
     {
         /// <summary>
-        /// Gets the options for this program
+        /// Gets the processor for this program
         /// </summary>
-        public ProgramOptions Options
+        public Processor Processor
         {
             get;
             private set;
@@ -39,22 +39,22 @@ namespace JCowgill.PicoBlazeSim
         /// <summary>
         /// Creates a new Program
         /// </summary>
-        /// <param name="options">options affecting the program</param>
+        /// <param name="processor">the processor for this program</param>
         /// <param name="instructions">the program instructions</param>
         /// <param name="labels">optional labels assigned to instructions</param>
-        public Program(ProgramOptions options, IList<IInstruction> instructions,
+        public Program(Processor processor, IList<IInstruction> instructions,
                         IDictionary<short, string> labels = null)
         {
-            this.Options = options;
+            this.Processor = processor;
 
             // Check instructions size
-            if (instructions.Count > options.RomSize)
+            if (instructions.Count > processor.RomSize)
             {
                 throw new ArgumentException("Number of instructions > size of instruction ROM");
             }
 
             // Create new readonly instructions array
-            IInstruction[] instructionArray = new IInstruction[options.RomSize];
+            IInstruction[] instructionArray = new IInstruction[processor.RomSize];
             instructions.CopyTo(instructionArray, 0);
             this.Instructions = new ReadOnlyCollection<IInstruction>(instructionArray);
 

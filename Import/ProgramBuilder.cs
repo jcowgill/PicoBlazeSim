@@ -108,9 +108,9 @@ namespace JCowgill.PicoBlazeSim.Import
         /// <summary>
         /// Creates a program from the information in the program builder
         /// </summary>
-        /// <param name="options">program options to pass to the program</param>
+        /// <param name="processor">processor to pass to the program</param>
         /// <returns>the created program</returns>
-        public Program CreateProgram(ProgramOptions options)
+        public Program CreateProgram(Processor processor)
         {
             // Resolve all fixups
             foreach (Tuple<short, string> fixup in fixups)
@@ -128,7 +128,7 @@ namespace JCowgill.PicoBlazeSim.Import
             }
 
             // Create program object
-            return new Program(options, store, labelsReversed);
+            return new Program(processor, store, labelsReversed);
         }
     }
 }

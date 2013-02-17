@@ -27,6 +27,8 @@ namespace JCowgill.PicoBlazeSim.Instructions
         /// <summary>
         /// Creates a new Jump or Call instruction
         /// </summary>
+        /// <param name="isCall">true if this is a call instruction</param>
+        /// <param name="dest">destination address</param>
         /// <param name="condition">the condition to execute this instruction on</param>
         public JumpCall(bool isCall,
                         short dest,
@@ -35,6 +37,32 @@ namespace JCowgill.PicoBlazeSim.Instructions
         {
             this.IsCall = isCall;
             this.Destination = dest;
+        }
+
+        /// <summary>
+        /// Creates a new Jump or Call instruction with an empty destination
+        /// </summary>
+        /// <param name="isCall">true if this is a call instruction</param>
+        /// <param name="condition">the condition to execute this instruction on</param>
+        /// <remarks>
+        /// This is designed for instructions which will be fixed up later
+        /// </remarks>
+        public JumpCall(bool isCall, ConditionType condition = ConditionType.Unconditional)
+            : this(isCall, 0, condition)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new Jump or Call instruction with a new destination
+        /// </summary>
+        /// <param name="old">instruction to base this new one on</param>
+        /// <param name="dest">destination address</param>
+        /// <remarks>
+        /// This is designed for completing a fixup
+        /// </remarks>
+        public JumpCall(JumpCall old, short dest)
+            : this(old.IsCall, dest, old.Condition)
+        {
         }
 
         public override void Accept(IInstructionVisitor visitor)

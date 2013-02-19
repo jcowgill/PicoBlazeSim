@@ -21,5 +21,10 @@ namespace JCowgill.PicoBlazeSim.Instructions
         {
             visitor.Visit(this);
         }
+
+        public override string ToString()
+        {
+            return string.Format("{0} s{1}, s{2}", Type, Left, Right);
+        }
     }
 }

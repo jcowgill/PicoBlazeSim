@@ -28,5 +28,11 @@ namespace JCowgill.PicoBlazeSim.Instructions
         {
             visitor.Visit(this);
         }
+
+        public override string ToString()
+        {
+            string enableStr = EnableInterrupts ? "Enable" : "Disable";
+            return string.Format("ReturnInterrupt {0}", enableStr);
+        }
     }
 }

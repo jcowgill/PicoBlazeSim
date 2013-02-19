@@ -1,4 +1,5 @@
 ﻿
+using System.Diagnostics;
 namespace JCowgill.PicoBlazeSim.Instructions
 {
     /// <summary>
@@ -20,6 +21,11 @@ namespace JCowgill.PicoBlazeSim.Instructions
         public override void Accept(IInstructionVisitor visitor)
         {
             visitor.Visit(this);
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0} s{1}, {2:X2}", Type, Left, Right);
         }
     }
 }

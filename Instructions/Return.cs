@@ -19,5 +19,10 @@ namespace JCowgill.PicoBlazeSim.Instructions
         {
             visitor.Visit(this);
         }
+
+        public override string ToString()
+        {
+            return string.Format("Return{0}", ConditionStr);
+        }
     }
 }

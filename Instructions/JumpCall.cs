@@ -69,5 +69,11 @@ namespace JCowgill.PicoBlazeSim.Instructions
         {
             visitor.Visit(this);
         }
+
+        public override string ToString()
+        {
+            string instruction = IsCall ? "Call" : "Jump";
+            return string.Format("{0}{1} {2:X4}", instruction, ConditionStr, Destination);
+        }
     }
 }

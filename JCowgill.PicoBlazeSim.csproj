@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Import\AssemblyImport.cs" />
     <Compile Include="Import\ImportException.cs" />
     <Compile Include="Import\ProgramBuilder.cs" />
     <Compile Include="Instructions\Binary.cs" />

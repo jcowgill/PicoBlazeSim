@@ -265,7 +265,23 @@ namespace JCowgill.PicoBlazeSim.Import
         /// <param name="isCall">true if this is a call instruction</param>
         private void ParseJumpCall(bool isCall)
         {
-            //
+            short data;
+            string labelName;
+
+            // Get condition
+            ConditionType cond = ParseCondition();
+            if (cond != ConditionType.Unconditional)
+                ConsumeToken(TokenType.Comma);
+
+            // Get label / constant
+            SymbolType symType = ParseSymbol(SymbolType.Constant | SymbolType.Label,
+                                                out data, out labelName);
+
+            // Add instruction
+            if (symType == SymbolType.Label)
+                builder.AddWithFixup(new JumpCall(isCall, cond), labelName);
+            else
+                builder.Add(new JumpCall(isCall, data, cond));
         }
 
         /// <summary>
@@ -298,7 +314,17 @@ namespace JCowgill.PicoBlazeSim.Import
         /// </summary>
         private void ParseReturnInterrupt()
         {
-            //
+            // Read disable word
+            string enableDisable = ConsumeWord().ToUpperInvariant();
+
+            if (enableDisable == "ENABLE")
+                builder.Add(new ReturnInterrupt(true));
+            else if (enableDisable == "DISABLE")
+                builder.Add(new ReturnInterrupt(false));
+            else
+                throw new ImportException("Syntax error: " + enableDisable);
+
+            ConsumeEndOfStmt();
         }
 
         /// <summary>
@@ -432,6 +458,22 @@ namespace JCowgill.PicoBlazeSim.Import
         /// </exception>
         private SymbolType ParseSymbol(SymbolType allowed, out short data)
         {
+            string dummy;
+            return ParseSymbol(allowed, out data, out dummy);
+        }
+
+        /// <summary>
+        /// Parses a symbol
+        /// </summary>
+        /// <param name="allowed">allowed types of symbol</param>
+        /// <param name="data">symbol data</param>
+        /// <param name="rawString">symbol raw string</param>
+        /// <returns>the symbol</returns>
+        /// <exception cref="ImportException">
+        /// Thrown if the symbol was undefined and allowed does not include Label
+        /// </exception>
+        private SymbolType ParseSymbol(SymbolType allowed, out short data, out string rawString)
+        {
             SymbolType symType = SymbolType.Label;
             Tuple<bool, short> symbol;
 
@@ -458,6 +500,7 @@ namespace JCowgill.PicoBlazeSim.Import
                 throw new ImportException("Invalid symbol type for instruction: \"" +
                                             symbolStr + "\"");
 
+            rawString = symbolStr;
             return symType;
         }
 
@@ -504,7 +547,7 @@ namespace JCowgill.PicoBlazeSim.Import
         private void ConsumeEndOfStmt(string errStr = "Syntax error")
         {
             // Test token type
-            if (current.Type != TokenType.Eof || current.Type != TokenType.NewLine)
+            if (current.Type != TokenType.Eof && current.Type != TokenType.NewLine)
                 throw new ImportException(errStr);
 
             // Consume token

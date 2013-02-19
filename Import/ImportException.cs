@@ -5,6 +5,7 @@ namespace JCowgill.PicoBlazeSim.Import
     /// <summary>
     /// Exception thrown when there is an error during the import process
     /// </summary>
+    [Serializable]
     public class ImportException : Exception
     {
         public ImportException(string msg)

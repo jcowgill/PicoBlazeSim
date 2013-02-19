@@ -4,7 +4,7 @@ namespace JCowgill.PicoBlazeSim.Instructions
     /// <summary>
     /// Instruction which sets the interrupt flag
     /// </summary>
-    public class SetInterruptFlag
+    public class SetInterruptFlag : IInstruction
     {
         /// <summary>
         /// True if interrupts are enabled after this instruction

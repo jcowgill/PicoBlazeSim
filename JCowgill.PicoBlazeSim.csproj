@@ -66,6 +66,10 @@
     <Compile Include="Processor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReadOnlyDictionary.cs" />
+    <Compile Include="Simulation\IInputOutputManager.cs" />
+    <Compile Include="Simulation\ProgramSimulator.cs" />
+    <Compile Include="Simulation\SimulationException.cs" />
+    <Compile Include="Simulation\SimulationStack.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Export\" />

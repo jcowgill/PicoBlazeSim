@@ -104,8 +104,13 @@ namespace JCowgill.PicoBlazeSim.Simulation
         /// </summary>
         /// <param name="program">program to simulate</param>
         /// <param name="ioManager">io manager to handle io requests</param>
+        /// <exception cref="SimulationException">A program with no instructions is passed</exception>
         public ProgramSimulator(Program program, IInputOutputManager ioManager)
         {
+            // Program must have some instructions
+            if (program.Instructions.Count == 0)
+                throw new SimulationException("Program must have some instructions");
+
             // Setup default values for properties
             this.Program = program;
             this.IoManager = ioManager;
@@ -157,7 +162,7 @@ namespace JCowgill.PicoBlazeSim.Simulation
             {
                 // Get instruction and increment program counter
                 IInstruction instr = Program.Instructions[ProgramCounter];
-                IncProgramCounter();
+                ProgramCounter = FixPcWraparound(ProgramCounter + 1);
 
                 // Ignore null instructions
                 if (instr != null)
@@ -173,15 +178,18 @@ namespace JCowgill.PicoBlazeSim.Simulation
         #region Private Methods
 
         /// <summary>
-        /// Increments the program counter and wraps it around if needed
+        /// Returns a wrapped-around version of the given program counter if needed
         /// </summary>
-        private void IncProgramCounter()
+        /// <param name="pc">program counter value to check</param>
+        /// <returns>the wrapped around pc value</returns>
+        private short FixPcWraparound(int pc)
         {
-            // Need to wrap around?
-            if (ProgramCounter + 1 >= Program.Instructions.Count)
-                ProgramCounter = 0;
+            if (pc < 0)
+                return (short) (Program.Instructions.Count - 1);
+            else if (pc >= Program.Instructions.Count)
+                return 0;
             else
-                ProgramCounter++;
+                return (short) pc;
         }
 
         #endregion
@@ -442,9 +450,9 @@ namespace JCowgill.PicoBlazeSim.Simulation
                 // Check condition
                 if (instruction.EvaluateCondition(parent.Zero, parent.Carry))
                 {
-                    // Return to previous address + 1
-                    parent.ProgramCounter = parent.CallStack.Pop().Address;
-                    parent.IncProgramCounter();
+                    // Return to previous address
+                    parent.ProgramCounter =
+                        parent.FixPcWraparound(parent.CallStack.Pop().Address + 1);
                 }
             }
 
@@ -471,7 +479,13 @@ namespace JCowgill.PicoBlazeSim.Simulation
                 {
                     // Push address onto stack
                     if (instruction.IsCall)
-                        parent.CallStack.Push(new SimulationStack.Frame(parent.ProgramCounter));
+                    {
+                        // Get previous address
+                        short prevAddress = parent.FixPcWraparound(parent.ProgramCounter - 1);
+
+                        // Push onto stack
+                        parent.CallStack.Push(new SimulationStack.Frame(prevAddress));
+                    }
 
                     // Set new address
                     parent.ProgramCounter = instruction.Destination;

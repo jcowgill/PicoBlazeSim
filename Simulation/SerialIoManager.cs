@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 
 namespace JCowgill.PicoBlazeSim.Simulation
 {
@@ -17,12 +16,15 @@ namespace JCowgill.PicoBlazeSim.Simulation
         /// <summary>
         /// Queue of bytes to be sent to the processor
         /// </summary>
-        private Queue<byte> txQueue = new Queue<byte>();
+        private ConcurrentQueue<byte> txQueue = new ConcurrentQueue<byte>();
 
         /// <summary>
         /// Enqueues a byte of data to be sent
         /// </summary>
         /// <param name="data">data to send</param>
+        /// <remarks>
+        /// This method is thread safe
+        /// </remarks>
         public void Enqueue(byte data)
         {
             txQueue.Enqueue(data);
@@ -30,20 +32,20 @@ namespace JCowgill.PicoBlazeSim.Simulation
 
         public byte Input(byte port)
         {
-            bool dataAvailable = (txQueue.Count > 0);
-
             // Which port?
             if (port == 0)
             {
+                byte result;
+
                 // Return 0 or the next byte on the queue
-                if (dataAvailable)
-                    return txQueue.Dequeue();
+                if (txQueue.TryDequeue(out result))
+                    return result;
             }
             else if (port == 1)
             {
                 // Status port
                 //  LSB is set when data is available
-                return (byte) (dataAvailable ? 7 : 6);
+                return (byte) (txQueue.IsEmpty ? 6 : 7);
             }
 
             return 0;

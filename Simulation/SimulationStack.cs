@@ -105,7 +105,8 @@ namespace JCowgill.PicoBlazeSim.Simulation
             if (stackPtr == 0)
                 throw new SimulationException("Call stack underflow");
 
-            return this.stack[stackPtr--];
+            stackPtr--;
+            return this.stack[stackPtr];
         }
 
         /// <summary>

@@ -67,7 +67,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReadOnlyDictionary.cs" />
     <Compile Include="Simulation\IInputOutputManager.cs" />
+    <Compile Include="Simulation\MultiplexedIoManager.cs" />
     <Compile Include="Simulation\ProgramSimulator.cs" />
+    <Compile Include="Simulation\RamIoManager.cs" />
+    <Compile Include="Simulation\SerialIoManager.cs" />
     <Compile Include="Simulation\SimulationException.cs" />
     <Compile Include="Simulation\SimulationStack.cs" />
   </ItemGroup>

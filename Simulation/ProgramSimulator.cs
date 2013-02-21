@@ -308,15 +308,16 @@ namespace JCowgill.PicoBlazeSim.Simulation
 
                     case Instructions.BinaryType.Sub:
                         // Subtract right from left
+                        parent.Carry = (result < rightVal);
                         result -= rightVal;
-                        parent.Carry = (result > rightVal);
                         parent.Zero = (result == 0);
                         break;
 
                     case Instructions.BinaryType.SubCarry:
                         // Subtract right from left and carry
-                        result -= (byte) (rightVal + (parent.Carry ? 1U : 0U));
-                        parent.Carry = (result > rightVal);
+                        byte subCarryRightTmp = (byte) (rightVal + (parent.Carry ? 1U : 0U));
+                        parent.Carry = (result < subCarryRightTmp);
+                        result -= subCarryRightTmp;
                         parent.Zero = (result == 0);
                         break;
 

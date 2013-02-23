@@ -13,6 +13,9 @@ namespace JCowgill.PicoBlazeSim
         void Visit(Return instruction);
         void Visit(ReturnInterrupt instruction);
         void Visit(SetInterruptFlag instruction);
+        void Visit(SetRegisterBank instruction);
         void Visit(JumpCall instruction);
+        void Visit(JumpCallIndirect instruction);
+        void Visit(HwBuild instruction);
     }
 }

@@ -17,5 +17,6 @@ namespace JCowgill.PicoBlazeSim
         void Visit(JumpCall instruction);
         void Visit(JumpCallIndirect instruction);
         void Visit(HwBuild instruction);
+        void Visit(OutputConstant instruction);
     }
 }

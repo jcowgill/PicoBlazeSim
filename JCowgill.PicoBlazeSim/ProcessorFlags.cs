@@ -39,6 +39,16 @@ namespace JCowgill.PicoBlazeSim
         HasTestCompareCarry = 32,
 
         /// <summary>
+        /// Process has indirect jumps and calls
+        /// </summary>
+        HasIndirectJumps = 64,
+
+        /// <summary>
+        /// Processor has the OutputConstant instruction
+        /// </summary>
+        HasOutputConstant = 128,
+
+        /// <summary>
         /// Flags available on the PicoBlaze3
         /// </summary>
         PicoBlaze3Flags = HasStoreFetch | HasTestCompare,
@@ -47,6 +57,7 @@ namespace JCowgill.PicoBlazeSim
         /// Flags available on the PicoBlaze6
         /// </summary>
         PicoBlaze6Flags = PicoBlaze3Flags | HasAlternateBank | HasHwBuild |
-                          HasLoadReturn   | HasTestCompareCarry,
+                          HasLoadReturn   | HasTestCompareCarry | HasIndirectJumps |
+                          HasOutputConstant,
     }
 }

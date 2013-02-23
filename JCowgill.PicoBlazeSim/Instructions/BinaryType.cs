@@ -68,7 +68,7 @@ namespace JCowgill.PicoBlazeSim.Instructions
         /// <para>If ZERO == 0, do not modify ZERO flag</para>
         /// <para>If CARRY == 1, test for even parity instead of odd</para>
         /// </remarks>
-        TestCy,
+        TestCarry,
 
         /// <summary>
         /// Same as Compare but uses a SubCy instruction
@@ -76,7 +76,7 @@ namespace JCowgill.PicoBlazeSim.Instructions
         /// <remarks>
         /// <para>If ZERO == 0, do not modify ZERO flag</para>
         /// </remarks>
-        CompareCy,
+        CompareCarry,
 
         /// <summary>
         /// Read from input port

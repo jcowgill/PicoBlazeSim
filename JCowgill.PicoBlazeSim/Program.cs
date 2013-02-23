@@ -12,29 +12,17 @@ namespace JCowgill.PicoBlazeSim
         /// <summary>
         /// Gets the processor for this program
         /// </summary>
-        public Processor Processor
-        {
-            get;
-            private set;
-        }
+        public Processor Processor { get; private set; }
 
         /// <summary>
         /// Gets the list of instructions for this program (indexed by address)
         /// </summary>
-        public IList<IInstruction> Instructions
-        {
-            get;
-            private set;
-        }
+        public IList<IInstruction> Instructions { get; private set; }
 
         /// <summary>
         /// Gets the dictionary of labels for this program
         /// </summary>
-        public IDictionary<short, string> Labels
-        {
-            get;
-            private set;
-        }
+        public IDictionary<short, string> Labels { get; private set; }
 
         /// <summary>
         /// Creates a new Program

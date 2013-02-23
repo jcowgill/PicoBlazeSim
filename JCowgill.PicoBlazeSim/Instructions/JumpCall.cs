@@ -9,20 +9,12 @@ namespace JCowgill.PicoBlazeSim.Instructions
         /// <summary>
         /// True if this instruction is a call
         /// </summary>
-        public bool IsCall
-        {
-            get;
-            private set;
-        }
+        public bool IsCall { get; private set; }
 
         /// <summary>
         /// The destination address of this instruction
         /// </summary>
-        public short Destination
-        {
-            get;
-            private set;
-        }
+        public short Destination { get; private set; }
 
         /// <summary>
         /// Creates a new Jump or Call instruction

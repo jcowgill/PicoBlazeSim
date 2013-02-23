@@ -9,20 +9,12 @@ namespace JCowgill.PicoBlazeSim.Instructions
         /// <summary>
         /// Gets the type of this shift instruction
         /// </summary>
-        public ShiftType Type
-        {
-            get;
-            private set;
-        }
+        public ShiftType Type { get; private set; }
 
         /// <summary>
         /// Gets the register used in this instruction
         /// </summary>
-        public byte Register
-        {
-            get;
-            private set;
-        }
+        public byte Register { get; private set; }
 
         /// <summary>
         /// Creates a new Shift instruction

@@ -9,11 +9,7 @@ namespace JCowgill.PicoBlazeSim.Instructions
         /// <summary>
         /// True if interrupts are enabled after this instruction
         /// </summary>
-        public bool EnableInterrupts
-        {
-            get;
-            private set;
-        }
+        public bool EnableInterrupts { get; private set; }
 
         /// <summary>
         /// Creates a new SetInterruptFlag instruction

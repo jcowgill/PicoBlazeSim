@@ -9,29 +9,17 @@ namespace JCowgill.PicoBlazeSim.Instructions
         /// <summary>
         /// Gets the type of this binary instruction
         /// </summary>
-        public BinaryType Type
-        {
-            get;
-            private set;
-        }
+        public BinaryType Type { get; private set; }
 
         /// <summary>
         /// Gets the left register in this instruction
         /// </summary>
-        public byte Left
-        {
-            get;
-            private set;
-        }
+        public byte Left { get; private set; }
 
         /// <summary>
         /// Gets the right register / constant in this instruction
         /// </summary>
-        public byte Right
-        {
-            get;
-            private set;
-        }
+        public byte Right { get; private set; }
 
         /// <summary>
         /// Creates a new Binary instruction

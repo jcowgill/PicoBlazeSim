@@ -36,11 +36,7 @@ namespace JCowgill.PicoBlazeSim.Import
         /// <summary>
         /// Gets or sets the current write address
         /// </summary>
-        public short Address
-        {
-            get;
-            set;
-        }
+        public short Address { get; set; }
 
         /// <summary>
         /// Adds a new instruction to the program

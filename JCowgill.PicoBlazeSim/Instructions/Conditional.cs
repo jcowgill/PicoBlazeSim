@@ -10,11 +10,7 @@ namespace JCowgill.PicoBlazeSim.Instructions
         /// <summary>
         /// Gets the condition associated with this instruction
         /// </summary>
-        public ConditionType Condition
-        {
-            get;
-            private set;
-        }
+        public ConditionType Condition { get; private set; }
 
         /// <summary>
         /// Returns string for representing conditions

@@ -91,15 +91,15 @@ namespace JCowgill.PicoBlazeSim.Import
             { "AND",        x => x.ParseBinary(BinaryType.And) },
             { "COMPARE",    x => x.ParseBinary(BinaryType.Compare) },
             { "COMPARECY",  x => x.ParseBinary(BinaryType.CompareCarry) },
-            { "FETCH",      x => x.ParseBinary(BinaryType.Fetch) },
-            { "INPUT",      x => x.ParseBinary(BinaryType.Input) },
+            { "FETCH",      x => x.ParseBinary(BinaryType.Fetch, true) },
+            { "INPUT",      x => x.ParseBinary(BinaryType.Input, true) },
             { "LOAD",       x => x.ParseBinary(BinaryType.Load) },
             { "LOAD&RETURN",x => x.ParseBinary(BinaryType.LoadReturn) },
             { "LOADRET",    x => x.ParseBinary(BinaryType.LoadReturn) },
             { "OR",         x => x.ParseBinary(BinaryType.Or) },
-            { "OUTPUT",     x => x.ParseBinary(BinaryType.Output) },
+            { "OUTPUT",     x => x.ParseBinary(BinaryType.Output, true) },
             { "STAR",       x => x.ParseBinary(BinaryType.Star) },
-            { "STORE",      x => x.ParseBinary(BinaryType.Store) },
+            { "STORE",      x => x.ParseBinary(BinaryType.Store, true) },
             { "SUB",        x => x.ParseBinary(BinaryType.Sub) },
             { "SUBCY",      x => x.ParseBinary(BinaryType.SubCarry) },
             { "TEST",       x => x.ParseBinary(BinaryType.Test) },
@@ -196,7 +196,8 @@ namespace JCowgill.PicoBlazeSim.Import
         /// Parses a binary instruction (register and constant)
         /// </summary>
         /// <param name="op">The BinaryType for this instruction</param>
-        private void ParseBinary(BinaryType op)
+        /// <param name="indirectRight">True if the right argument is indirect (surrounded by brakets)</param>
+        private void ParseBinary(BinaryType op, bool indirectRight = false)
         {
             // Parse left side
             byte left;
@@ -205,8 +206,29 @@ namespace JCowgill.PicoBlazeSim.Import
 
             // Parse right side
             byte right;
-            SymbolType type =
-                ParseSmallSymbol(SymbolType.Constant | SymbolType.Register, out right);
+            SymbolType type;
+
+            if (indirectRight)
+            {
+                // Force register / constant depending on whether there are brakets
+                if (current.Type == TokenType.BraketOpen)
+                {
+                    // Register
+                    ConsumeToken();
+                    type = ParseSmallSymbol(SymbolType.Register, out right);
+                    ConsumeToken(TokenType.BraketClose);
+                }
+                else
+                {
+                    //Constant
+                    type = ParseSmallSymbol(SymbolType.Constant, out right);
+                }
+            }
+            else
+            {
+                // Allow any token type
+                type = ParseSmallSymbol(SymbolType.Constant | SymbolType.Register, out right);
+            }
 
             // Add final statement
             if (type == SymbolType.Constant)
@@ -263,9 +285,11 @@ namespace JCowgill.PicoBlazeSim.Import
             // Get both registers
             byte reg1, reg2;
 
+            ConsumeToken(TokenType.BraketOpen);
             ParseSmallSymbol(SymbolType.Register, out reg1);
             ConsumeToken(TokenType.Comma);
             ParseSmallSymbol(SymbolType.Register, out reg2);
+            ConsumeToken(TokenType.BraketClose);
 
             // Add instructions
             builder.Add(new JumpCallIndirect(isCall, reg1, reg2));
@@ -630,6 +654,14 @@ namespace JCowgill.PicoBlazeSim.Import
                     // Colon
                     return new Token(TokenType.Colon);
 
+                case '(':
+                    // BraketOpen
+                    return new Token(TokenType.BraketOpen);
+
+                case ')':
+                    // BraketClose
+                    return new Token(TokenType.BraketClose);
+
                 default:
                     // Identifier
                     StringBuilder builder = new StringBuilder();
@@ -687,8 +719,12 @@ namespace JCowgill.PicoBlazeSim.Import
         {
             Eof,
             NewLine,
+
             Comma,
             Colon,
+            BraketOpen,
+            BraketClose,
+
             Word,
         }
 

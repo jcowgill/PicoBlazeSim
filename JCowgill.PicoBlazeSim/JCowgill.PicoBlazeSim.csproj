@@ -53,6 +53,10 @@
     <Compile Include="Instructions\BinaryType.cs" />
     <Compile Include="Instructions\Conditional.cs" />
     <Compile Include="Instructions\ConditionType.cs" />
+    <Compile Include="Instructions\OutputConstant.cs" />
+    <Compile Include="Instructions\HwBuild.cs" />
+    <Compile Include="Instructions\SetRegisterBank.cs" />
+    <Compile Include="Instructions\JumpCallIndirect.cs" />
     <Compile Include="Instructions\JumpCall.cs" />
     <Compile Include="Instructions\Return.cs" />
     <Compile Include="Instructions\ReturnInterrupt.cs" />

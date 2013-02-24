@@ -80,43 +80,61 @@ namespace JCowgill.PicoBlazeSim.Import
         #region Main Parser
 
         /// <summary>
-        /// Dictionary of binary instructions with their BinaryType
+        /// Dictionary of keywords with the action which parses them
         /// </summary>
-        private static readonly Dictionary<string, BinaryType> BinaryInstructions =
-            new Dictionary<string, BinaryType>()
+        private static readonly Dictionary<string, Action<AssemblyImport>> Keywords =
+            new Dictionary<string, Action<AssemblyImport>>()
         {
-            { "ADD",        BinaryType.Add },
-            { "ADDCY",      BinaryType.AddCarry },
-            { "AND",        BinaryType.And },
-            { "COMPARE",    BinaryType.Compare },
-            { "FETCH",      BinaryType.Fetch },
-            { "INPUT",      BinaryType.Input },
-            { "LOAD",       BinaryType.Load },
-            { "OR",         BinaryType.Or },
-            { "OUTPUT",     BinaryType.Output },
-            { "STORE",      BinaryType.Store },
-            { "SUB",        BinaryType.Sub },
-            { "SUBCY",      BinaryType.SubCarry },
-            { "TEST",       BinaryType.Test },
-            { "XOR",        BinaryType.Xor },
-        };
+            // Binary Instructions
+            { "ADD",        x => x.ParseBinary(BinaryType.Add) },
+            { "ADDCY",      x => x.ParseBinary(BinaryType.AddCarry) },
+            { "AND",        x => x.ParseBinary(BinaryType.And) },
+            { "COMPARE",    x => x.ParseBinary(BinaryType.Compare) },
+            { "COMPARECY",  x => x.ParseBinary(BinaryType.CompareCarry) },
+            { "FETCH",      x => x.ParseBinary(BinaryType.Fetch) },
+            { "INPUT",      x => x.ParseBinary(BinaryType.Input) },
+            { "LOAD",       x => x.ParseBinary(BinaryType.Load) },
+            { "LOAD&RETURN",x => x.ParseBinary(BinaryType.LoadReturn) },
+            { "LOADRET",    x => x.ParseBinary(BinaryType.LoadReturn) },
+            { "OR",         x => x.ParseBinary(BinaryType.Or) },
+            { "OUTPUT",     x => x.ParseBinary(BinaryType.Output) },
+            { "STAR",       x => x.ParseBinary(BinaryType.Star) },
+            { "STORE",      x => x.ParseBinary(BinaryType.Store) },
+            { "SUB",        x => x.ParseBinary(BinaryType.Sub) },
+            { "SUBCY",      x => x.ParseBinary(BinaryType.SubCarry) },
+            { "TEST",       x => x.ParseBinary(BinaryType.Test) },
+            { "TESTCY",     x => x.ParseBinary(BinaryType.TestCarry) },
+            { "XOR",        x => x.ParseBinary(BinaryType.Xor) },
 
-        /// <summary>
-        /// Dictionary of shift instructions with their ShiftType
-        /// </summary>
-        private static readonly Dictionary<string, ShiftType> ShiftInstructions =
-            new Dictionary<string, ShiftType>()
-        {
-            { "RL",     ShiftType.Rl  },
-            { "RR",     ShiftType.Rr  },
-            { "SL0",    ShiftType.Sl0 },
-            { "SL1",    ShiftType.Sl1 },
-            { "SLA",    ShiftType.Sla },
-            { "SLX",    ShiftType.Slx },
-            { "SR0",    ShiftType.Sr0 },
-            { "SR1",    ShiftType.Sr1 },
-            { "SRA",    ShiftType.Sra },
-            { "SRX",    ShiftType.Srx },
+            // Shift Instructions
+            { "RL",     	x => x.ParseShift(ShiftType.Rl)  },
+            { "RR",     	x => x.ParseShift(ShiftType.Rr)  },
+            { "SL0",    	x => x.ParseShift(ShiftType.Sl0) },
+            { "SL1",    	x => x.ParseShift(ShiftType.Sl1) },
+            { "SLA",    	x => x.ParseShift(ShiftType.Sla) },
+            { "SLX",    	x => x.ParseShift(ShiftType.Slx) },
+            { "SR0",    	x => x.ParseShift(ShiftType.Sr0) },
+            { "SR1",    	x => x.ParseShift(ShiftType.Sr1) },
+            { "SRA",    	x => x.ParseShift(ShiftType.Sra) },
+            { "SRX",    	x => x.ParseShift(ShiftType.Srx) },
+
+            // Other Instructions
+            { "CALL",       x => x.ParseJumpCall(true) },
+            { "JUMP",       x => x.ParseJumpCall(false) },
+            { "CALL@",      x => x.ParseJumpCallIndirect(true) },
+            { "JUMP@",      x => x.ParseJumpCallIndirect(false) },
+            { "ENABLE",     x => x.ParseSetInterruptFlag(true) },
+            { "DISABLE",    x => x.ParseSetInterruptFlag(false) },
+            { "RETURN",     x => x.ParseReturn() },
+            { "RETURNI",    x => x.ParseReturnInterrupt() },
+            { "REGBANK",    x => x.ParseSetRegisterBank() },
+            { "HWBUILD",    x => x.ParseHwBuild() },
+            { "OUTPUTK",    x => x.ParseOutputConstant() },
+
+            // Assebler Directives
+            { "CONSTANT",   x => x.ParseConstantDirective() },
+            { "NAMEREG",    x => x.ParseNameRegDirective() },
+            { "ADDRESS",    x => x.ParseAddressDirective() },
         };
 
         /// <summary>
@@ -136,78 +154,33 @@ namespace JCowgill.PicoBlazeSim.Import
                 }
                 else if (current.Type == TokenType.Word)
                 {
+                    Action<AssemblyImport> parseFunc;
+
                     // Get word data
                     string data = ConsumeWord();
                     string upper = data.ToUpperInvariant();
 
                     // Test for keywords
-                    BinaryType binType;
-                    ShiftType shiftType;
-
-                    if (BinaryInstructions.TryGetValue(upper, out binType))
+                    if (Keywords.TryGetValue(upper, out parseFunc))
                     {
-                        ParseBinary(binType);
-                    }
-                    else if (ShiftInstructions.TryGetValue(upper, out shiftType))
-                    {
-                        ParseShift(shiftType);
+                        parseFunc(this);
+                        ConsumeEndOfStmt();
                     }
                     else
                     {
-                        // Test for special instructions and directives
-                        switch (upper)
+                        // Label
+
+                        // Next token must be a colon
+                        if (current.Type != TokenType.Colon)
                         {
-                            case "CALL":
-                                ParseJumpCall(true);
-                                break;
-
-                            case "JUMP":
-                                ParseJumpCall(false);
-                                break;
-
-                            case "ENABLE":
-                                ParseSetInterruptFlag(true);
-                                break;
-
-                            case "DISABLE":
-                                ParseSetInterruptFlag(false);
-                                break;
-
-                            case "RETURN":
-                                ParseReturn();
-                                break;
-
-                            case "RETURNI":
-                                ParseReturnInterrupt();
-                                break;
-
-                            case "CONSTANT":
-                                ParseConstantDirective();
-                                break;
-
-                            case "NAMEREG":
-                                ParseNameRegDirective();
-                                break;
-
-                            case "ADDRESS":
-                                ParseAddressDirective();
-                                break;
-
-                            default:
-                                // Label
-
-                                // Next token must be a colon
-                                if (current.Type != TokenType.Colon)
-                                {
-                                    throw new ImportException("Label \"" + data +
-                                        "\" must be followed by a colon");
-                                }
-
-                                // Mark the label
-                                ConsumeToken();
-                                builder.MarkLabel(data);
-                                break;
+                            throw new ImportException("Label \"" + data +
+                                "\" must be followed by a colon");
                         }
+
+                        // Mark the label
+                        ConsumeToken();
+                        builder.MarkLabel(data);
+                        break;
                     }
                 }
                 else
@@ -240,8 +213,6 @@ namespace JCowgill.PicoBlazeSim.Import
                 builder.Add(new BinaryConstant(op, left, right));
             else
                 builder.Add(new BinaryRegister(op, left, right));
-
-            ConsumeEndOfStmt();
         }
 
         /// <summary>
@@ -256,7 +227,6 @@ namespace JCowgill.PicoBlazeSim.Import
 
             // Create the shift statement based on register
             builder.Add(new Shift(op, reg));
-            ConsumeEndOfStmt();
         }
 
         /// <summary>
@@ -285,28 +255,29 @@ namespace JCowgill.PicoBlazeSim.Import
         }
 
         /// <summary>
+        /// Parses an indirect jump / call instruction
+        /// </summary>
+        /// <param name="isCall">true if this is a call instruction</param>
+        private void ParseJumpCallIndirect(bool isCall)
+        {
+            // Get both registers
+            byte reg1, reg2;
+
+            ParseSmallSymbol(SymbolType.Register, out reg1);
+            ConsumeToken(TokenType.Comma);
+            ParseSmallSymbol(SymbolType.Register, out reg2);
+
+            // Add instructions
+            builder.Add(new JumpCallIndirect(isCall, reg1, reg2));
+        }
+
+        /// <summary>
         /// Parses a return instruction
         /// </summary>
         private void ParseReturn()
         {
             // Create return based on conditional
             builder.Add(new Return(ParseCondition()));
-            ConsumeEndOfStmt();
-        }
-
-        /// <summary>
-        /// Parses an interrupt enabling instruction
-        /// </summary>
-        /// <param name="enable">true if this is an enable interrupts instruction</param>
-        private void ParseSetInterruptFlag(bool enable)
-        {
-            // Require the INTERRUPT keyword
-            if (ConsumeWord().ToUpperInvariant() != "INTERRUPT")
-                throw new ImportException("Syntax error");
-
-            // Add flag setting statement
-            builder.Add(new SetInterruptFlag(enable));
-            ConsumeEndOfStmt();
         }
 
         /// <summary>
@@ -323,8 +294,69 @@ namespace JCowgill.PicoBlazeSim.Import
                 builder.Add(new ReturnInterrupt(false));
             else
                 throw new ImportException("Syntax error: " + enableDisable);
+        }
 
-            ConsumeEndOfStmt();
+        /// <summary>
+        /// Parses an interrupt enabling instruction
+        /// </summary>
+        /// <param name="enable">true if this is an enable interrupts instruction</param>
+        private void ParseSetInterruptFlag(bool enable)
+        {
+            // Require the INTERRUPT keyword
+            if (ConsumeWord().ToUpperInvariant() != "INTERRUPT")
+                throw new ImportException("Syntax error");
+
+            // Add flag setting statement
+            builder.Add(new SetInterruptFlag(enable));
+        }
+
+        /// <summary>
+        /// Parses an REGBANK instruction
+        /// </summary>
+        private void ParseSetRegisterBank()
+        {
+            // Which bank to set to
+            string bankStr = ConsumeWord().ToUpperInvariant();
+            bool alternateBank;
+
+            if (bankStr == "A")
+                alternateBank = false;
+            else if (bankStr == "B")
+                alternateBank = true;
+            else
+                throw new ImportException("Invalid register bank: \"" + bankStr + "\"");
+
+            // Add statement
+            builder.Add(new SetRegisterBank(alternateBank));
+        }
+
+        /// <summary>
+        /// Parses an HWBUILD instruction
+        /// </summary>
+        private void ParseHwBuild()
+        {
+            // Parse register
+            byte reg;
+            ParseSmallSymbol(SymbolType.Register, out reg);
+
+            // Add statement
+            builder.Add(new HwBuild(reg));
+        }
+
+        /// <summary>
+        /// Parses an OUTPUTK instruction
+        /// </summary>
+        private void ParseOutputConstant()
+        {
+            // Get both constants
+            byte constant, port;
+
+            ParseSmallSymbol(SymbolType.Constant, out constant);
+            ConsumeToken(TokenType.Comma);
+            ParseSmallSymbol(SymbolType.Constant, out port);
+
+            // Add instructions
+            builder.Add(new OutputConstant(constant, port));
         }
 
         /// <summary>

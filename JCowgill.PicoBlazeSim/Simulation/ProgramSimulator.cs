@@ -15,6 +15,11 @@ namespace JCowgill.PicoBlazeSim.Simulation
         private short pcBacking;
 
         /// <summary>
+        /// Value currently being added to all registers (for register banks)
+        /// </summary>
+        private int bankAdder;
+
+        /// <summary>
         /// Visitor class which handles instruction simulation
         /// </summary>
         private readonly Visitor myVisitor;
@@ -49,6 +54,36 @@ namespace JCowgill.PicoBlazeSim.Simulation
                 pcBacking = value;
             }
         }
+
+        /// <summary>
+        /// Gets or sets whether the alternate register bank is being used
+        /// </summary>
+        /// <exception cref="SimulationException">This processor does not support alternate banks</exception>
+        public bool UseAlternateRegisterBank
+        {
+            get { return bankAdder != 0; }
+
+            set
+            {
+                if (value)
+                {
+                    // Must be able to use banks
+                    EnsureProcessorFlag(ProcessorFlags.HasAlternateBank);
+
+                    // Set correct bank adder
+                    bankAdder = Registers.Length / 2;
+                }
+                else
+                {
+                    bankAdder = 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The HwBuild constant (retrieved by the HwBuild instruction)
+        /// </summary>
+        public byte HwBuild { get; private set; }
 
         /// <summary>
         /// Gets the array of registers this simulator can use
@@ -118,6 +153,14 @@ namespace JCowgill.PicoBlazeSim.Simulation
             this.ScratchpadRam = new byte[program.Processor.ScratchpadSize];
             this.CallStack = new SimulationStack(program.Processor.StackSize);
 
+            // Register banks?
+            int regsCount = program.Processor.RegisterCount;
+
+            if ((program.Processor.Flags & ProcessorFlags.HasAlternateBank) != 0)
+                regsCount *= 2;
+
+            this.Registers = new byte[regsCount];
+
             // Setup simulation visitor
             this.myVisitor = new Visitor(this);
         }
@@ -173,6 +216,40 @@ namespace JCowgill.PicoBlazeSim.Simulation
             }
         }
 
+        /// <summary>
+        /// Reads the given register using the current register bank
+        /// </summary>
+        /// <param name="reg">register number</param>
+        /// <returns>the value of that register as seen by the processor</returns>
+        public byte GetRegister(byte reg)
+        {
+            // Adjust register for alternate banks
+            int regIndex = reg + bankAdder;
+
+            // Validate
+            if (regIndex >= Registers.Length)
+                throw new SimulationException("Invalid register number: " + reg);
+
+            return Registers[regIndex];
+        }
+
+        /// <summary>
+        /// Writes to the given register using the current register bank
+        /// </summary>
+        /// <param name="reg">register number</param>
+        /// <param name="value">value to write</param>
+        public void SetRegister(byte reg, byte value)
+        {
+            // Adjust register for alternate banks
+            int regIndex = reg + bankAdder;
+
+            // Validate
+            if (regIndex >= Registers.Length)
+                throw new SimulationException("Invalid register number: " + reg);
+
+            Registers[regIndex] = value;
+        }
+
         #endregion
 
         #region Private Methods
@@ -192,6 +269,30 @@ namespace JCowgill.PicoBlazeSim.Simulation
                 return (short) pc;
         }
 
+        /// <summary>
+        /// Ensures that a processor flag is set
+        /// </summary>
+        /// <param name="flag">flag to check</param>
+        private void EnsureProcessorFlag(ProcessorFlags flag)
+        {
+            if ((Program.Processor.Flags & flag) == 0)
+                throw new SimulationException("Invalid operation for this processor (" + flag + ")");
+        }
+
+        /// <summary>
+        /// Writes to the given register using the current register bank
+        /// </summary>
+        /// <param name="reg">register number</param>
+        /// <param name="value">value to write</param>
+        /// <remarks>
+        /// Unlike <see cref="SetRegister"/>, this method does no validation
+        /// </remarks>
+        public void SetRegisterFast(byte reg, byte value)
+        {
+            // Write register
+            Registers[reg + bankAdder] = value;
+        }
+
         #endregion
 
         #region Simulation Visitor
@@ -201,6 +302,12 @@ namespace JCowgill.PicoBlazeSim.Simulation
         /// </summary>
         private class Visitor : IInstructionVisitor
         {
+            /// <summary>
+            /// Unconditional return instruction used by LOADRET
+            /// </summary>
+            private static readonly Instructions.Return UnconditionalReturn =
+                new Instructions.Return();
+
             /// <summary>
             /// Parent ProgramSimulator
             /// </summary>
@@ -213,29 +320,6 @@ namespace JCowgill.PicoBlazeSim.Simulation
             public Visitor(ProgramSimulator parent)
             {
                 this.parent = parent;
-            }
-
-            /// <summary>
-            /// Ensures that a processor flag is set
-            /// </summary>
-            /// <param name="flag">flag to check</param>
-            private void EnsureProcessorFlag(ProcessorFlags flag)
-            {
-                if ((parent.Program.Processor.Flags & flag) == 0)
-                    throw new SimulationException("Invalid instruction for this processor (" + flag + ")");
-            }
-
-            /// <summary>
-            /// Validates and reads a register
-            /// </summary>
-            /// <param name="reg">register to read</param>
-            /// <returns>the value of that register</returns>
-            private byte ReadRegister(byte reg)
-            {
-                if (reg >= parent.Registers.Length)
-                    throw new SimulationException("Invalid register number: " + reg);
-
-                return parent.Registers[reg];
             }
 
             /// <summary>
@@ -252,6 +336,63 @@ namespace JCowgill.PicoBlazeSim.Simulation
             }
 
             /// <summary>
+            /// Helper method for the TEST instruction
+            /// </summary>
+            /// <param name="withCarry">true for TESTCY instructions</param>
+            /// <param name="left">left value</param>
+            /// <param name="right">right value</param>
+            private void TestHelper(bool withCarry, byte left, byte right)
+            {
+                bool inZero = true;
+                bool inCarry = false;
+
+                // With carry?
+                if (withCarry)
+                {
+                    parent.EnsureProcessorFlag(ProcessorFlags.HasTestCompareCarry);
+                    inZero = parent.Zero;
+                    inCarry = parent.Carry;
+                }
+                else
+                {
+                    parent.EnsureProcessorFlag(ProcessorFlags.HasTestCompare);
+                }
+
+                // Do tests
+                parent.Zero = inZero && ((left & right) == 0);
+                parent.Carry = inCarry != HasOddParity((byte) (left & right));
+            }
+
+            /// <summary>
+            /// Helper method for the COMPARER instruction
+            /// </summary>
+            /// <param name="withCarry">true for COMPARECY instructions</param>
+            /// <param name="left">left value</param>
+            /// <param name="right">right value</param>
+            private void CompareHelper(bool withCarry, byte left, byte right)
+            {
+                bool inZero = true;
+
+                // With carry?
+                if (withCarry)
+                {
+                    parent.EnsureProcessorFlag(ProcessorFlags.HasTestCompareCarry);
+                    inZero = parent.Zero;
+
+                    if (parent.Carry)
+                        right++;
+                }
+                else
+                {
+                    parent.EnsureProcessorFlag(ProcessorFlags.HasTestCompare);
+                }
+
+                // Do comparisons
+                parent.Carry = (left < right);
+                parent.Zero = inZero && (left == right);
+            }
+
+            /// <summary>
             /// Executes a binary instruction with a value on the right side
             /// </summary>
             /// <param name="instruction">instruction to execute</param>
@@ -261,7 +402,7 @@ namespace JCowgill.PicoBlazeSim.Simulation
                 byte[] ram = parent.ScratchpadRam;
 
                 // Read left register value
-                byte result = ReadRegister(instruction.Left);
+                byte result = parent.GetRegister(instruction.Left);
 
                 // Do the operation
                 switch (instruction.Type)
@@ -269,6 +410,14 @@ namespace JCowgill.PicoBlazeSim.Simulation
                     case Instructions.BinaryType.Load:
                         // Copy right into left
                         result = rightVal;
+                        break;
+
+                    case Instructions.BinaryType.LoadReturn:
+                        // Copy right into left
+                        result = rightVal;
+
+                        // Return
+                        Visit(UnconditionalReturn);
                         break;
 
                     case Instructions.BinaryType.And:
@@ -322,17 +471,17 @@ namespace JCowgill.PicoBlazeSim.Simulation
                         break;
 
                     case Instructions.BinaryType.Test:
-                        // Updates flags based on results of AND and XOR
-                        EnsureProcessorFlag(ProcessorFlags.HasTestCompare);
-                        parent.Zero = ((result & rightVal) == 0);
-                        parent.Carry = HasOddParity((byte) (result & rightVal));
+                    case Instructions.BinaryType.TestCarry:
+                        // Test with AND and XOR
+                        TestHelper(instruction.Type == Instructions.BinaryType.TestCarry,
+                                    result, rightVal);
                         break;
 
                     case Instructions.BinaryType.Compare:
-                        // Do comparisons
-                        EnsureProcessorFlag(ProcessorFlags.HasTestCompare);
-                        parent.Zero = (result == rightVal);
-                        parent.Carry = (result < rightVal);
+                    case Instructions.BinaryType.CompareCarry:
+                        // Compare values
+                        CompareHelper(instruction.Type == Instructions.BinaryType.CompareCarry,
+                                    result, rightVal);
                         break;
 
                     case Instructions.BinaryType.Input:
@@ -348,15 +497,22 @@ namespace JCowgill.PicoBlazeSim.Simulation
                     case Instructions.BinaryType.Fetch:
                         // Fetch from scratchpad ram
                         //  The actual picoblaze ignores the high bits so we will mask them out
-                        EnsureProcessorFlag(ProcessorFlags.HasStoreFetch);
+                        parent.EnsureProcessorFlag(ProcessorFlags.HasStoreFetch);
                         result = ram[rightVal & (ram.Length - 1)];
                         break;
 
                     case Instructions.BinaryType.Store:
                         // Write to scratchpad ram
                         //  The actual picoblaze ignores the high bits so we will mask them out
-                        EnsureProcessorFlag(ProcessorFlags.HasStoreFetch);
+                        parent.EnsureProcessorFlag(ProcessorFlags.HasStoreFetch);
                         ram[rightVal & (ram.Length - 1)] = result;
+                        break;
+
+                    case Instructions.BinaryType.Star:
+                        // Transfer register between banks
+                        parent.UseAlternateRegisterBank = !parent.UseAlternateRegisterBank;
+                        parent.SetRegisterFast(instruction.Left, rightVal);
+                        parent.UseAlternateRegisterBank = !parent.UseAlternateRegisterBank;
                         break;
 
                     default:
@@ -365,7 +521,7 @@ namespace JCowgill.PicoBlazeSim.Simulation
                 }
 
                 // Write result back
-                parent.Registers[instruction.Left] = result;
+                parent.SetRegisterFast(instruction.Left, result);
             }
 
             public void Visit(Instructions.BinaryConstant instruction)
@@ -375,13 +531,13 @@ namespace JCowgill.PicoBlazeSim.Simulation
 
             public void Visit(Instructions.BinaryRegister instruction)
             {
-                BinaryHelper(instruction, ReadRegister(instruction.Right));
+                BinaryHelper(instruction, parent.GetRegister(instruction.Right));
             }
 
             public void Visit(Instructions.Shift instruction)
             {
                 // Read register value
-                uint result = ReadRegister(instruction.Register);
+                uint result = parent.GetRegister(instruction.Register);
                 bool newCarry;
 
                 // Calculate new carry (only based on left / rightness)
@@ -443,7 +599,7 @@ namespace JCowgill.PicoBlazeSim.Simulation
                 parent.Zero = ((byte) result == 0);
 
                 // Write result back
-                parent.Registers[instruction.Register] = (byte) result;
+                parent.SetRegisterFast(instruction.Register, (byte) result);
             }
 
             public void Visit(Instructions.Return instruction)
@@ -473,24 +629,59 @@ namespace JCowgill.PicoBlazeSim.Simulation
                 parent.InterruptEnable = instruction.EnableInterrupts;
             }
 
+            private void JumpCallHelper(bool isCall, short destination)
+            {
+                // Push address onto stack
+                if (isCall)
+                {
+                    // Get previous address
+                    short prevAddress = parent.FixPcWraparound(parent.ProgramCounter - 1);
+
+                    // Push onto stack
+                    parent.CallStack.Push(new SimulationStack.Frame(prevAddress));
+                }
+
+                // Set new address
+                parent.ProgramCounter = destination;
+            }
+
             public void Visit(Instructions.JumpCall instruction)
             {
                 // Check condition
                 if (instruction.EvaluateCondition(parent.Zero, parent.Carry))
                 {
-                    // Push address onto stack
-                    if (instruction.IsCall)
-                    {
-                        // Get previous address
-                        short prevAddress = parent.FixPcWraparound(parent.ProgramCounter - 1);
-
-                        // Push onto stack
-                        parent.CallStack.Push(new SimulationStack.Frame(prevAddress));
-                    }
-
-                    // Set new address
-                    parent.ProgramCounter = instruction.Destination;
+                    JumpCallHelper(instruction.IsCall, instruction.Destination);
                 }
+            }
+
+            public void Visit(Instructions.SetRegisterBank instruction)
+            {
+                parent.UseAlternateRegisterBank = instruction.AlternateBank;
+            }
+
+            public void Visit(Instructions.JumpCallIndirect instruction)
+            {
+                // Calculate destination
+                int dest;
+
+                dest  = parent.GetRegister(instruction.Register1) << 8;
+                dest |= parent.GetRegister(instruction.Register2);
+
+                // Do jump
+                JumpCallHelper(instruction.IsCall, (short) dest);
+            }
+
+            public void Visit(Instructions.HwBuild instruction)
+            {
+                // Reads the HwBuild value
+                parent.EnsureProcessorFlag(ProcessorFlags.HasHwBuild);
+                parent.SetRegister(instruction.Register, parent.HwBuild);
+            }
+
+            public void Visit(Instructions.OutputConstant instruction)
+            {
+                // Output a constant
+                parent.IoManager.Output(instruction.Port, instruction.Constant);
             }
         }
 

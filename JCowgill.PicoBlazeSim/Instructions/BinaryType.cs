@@ -12,6 +12,11 @@ namespace JCowgill.PicoBlazeSim.Instructions
         Load,
 
         /// <summary>
+        /// Combination of Load and unconditional Return instructions
+        /// </summary>
+        LoadReturn,
+
+        /// <summary>
         /// Performs a bitwize and
         /// </summary>
         And,
@@ -47,7 +52,7 @@ namespace JCowgill.PicoBlazeSim.Instructions
         SubCarry,
 
         /// <summary>
-        /// Performs a bitwize and without saving the result (just updates registers)
+        /// Performs a bitwize and / xor without saving the result (just updates registers)
         /// </summary>
         Test,
 
@@ -55,6 +60,23 @@ namespace JCowgill.PicoBlazeSim.Instructions
         /// Performs a subtraction without saving the result (just updates registers)
         /// </summary>
         Compare,
+
+        /// <summary>
+        /// Same as Test but results change due to flags
+        /// </summary>
+        /// <remarks>
+        /// <para>If ZERO == 0, do not modify ZERO flag</para>
+        /// <para>If CARRY == 1, test for even parity instead of odd</para>
+        /// </remarks>
+        TestCarry,
+
+        /// <summary>
+        /// Same as Compare but uses a SubCy instruction
+        /// </summary>
+        /// <remarks>
+        /// <para>If ZERO == 0, do not modify ZERO flag</para>
+        /// </remarks>
+        CompareCarry,
 
         /// <summary>
         /// Read from input port
@@ -75,5 +97,10 @@ namespace JCowgill.PicoBlazeSim.Instructions
         /// Write to scratchpad ram
         /// </summary>
         Store,
+
+        /// <summary>
+        /// Copies a value into a register in another register bank
+        /// </summary>
+        Star,
     }
 }

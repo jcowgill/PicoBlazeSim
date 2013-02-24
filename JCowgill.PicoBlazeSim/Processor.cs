@@ -43,7 +43,18 @@ namespace JCowgill.PicoBlazeSim
             RegisterCount = 16,
             StackSize = 31,
             ScratchpadSize = 64,
-            Flags = ProcessorFlags.HasStoreFetch | ProcessorFlags.HasTestCompare,
+            Flags = ProcessorFlags.PicoBlaze3Flags,
+
+        }.Build();
+
+        public static readonly Processor PicoBlaze6 = new Builder()
+        {
+            RomSize = 4096,
+            InterruptVector = 0xFFF,
+            RegisterCount = 16,
+            StackSize = 31,
+            ScratchpadSize = 256,
+            Flags = ProcessorFlags.PicoBlaze6Flags,
 
         }.Build();
 
@@ -60,19 +71,19 @@ namespace JCowgill.PicoBlazeSim
         public short InterruptVector { get; private set; }
 
         /// <summary>
-        /// Gets the number of registers
+        /// Gets the number of registers (single bank)
         /// </summary>
-        public byte RegisterCount { get; private set; }
+        public short RegisterCount { get; private set; }
 
         /// <summary>
         /// Gets the size of the call stack
         /// </summary>
-        public int StackSize { get; private set; }
+        public short StackSize { get; private set; }
 
         /// <summary>
         /// Gets the size of scratchpad ram
         /// </summary>
-        public byte ScratchpadSize { get; private set; }
+        public short ScratchpadSize { get; private set; }
 
         /// <summary>
         /// Gets the flags for this processor
@@ -101,11 +112,36 @@ namespace JCowgill.PicoBlazeSim
         {
             public short RomSize { get; set; }
             public short InterruptVector { get; set; }
-            public byte RegisterCount { get; set; }
-            public int StackSize { get; set; }
-            public byte ScratchpadSize { get; set; }
+            public short RegisterCount { get; set; }
+            public short StackSize { get; set; }
+            public short ScratchpadSize { get; set; }
             public ProcessorFlags Flags { get; set; }
 
+            /// <summary>
+            /// Creates an empty Builder
+            /// </summary>
+            public Builder()
+            {
+            }
+
+            /// <summary>
+            /// Creates a builder based on another processor
+            /// </summary>
+            /// <param name="processor">processor to base on</param>
+            public Builder(Processor processor)
+            {
+                this.RomSize            = processor.RomSize;
+                this.InterruptVector    = processor.InterruptVector;
+                this.RegisterCount      = processor.RegisterCount;
+                this.StackSize          = processor.StackSize;
+                this.ScratchpadSize     = processor.ScratchpadSize;
+                this.Flags              = processor.Flags;
+            }
+
+            /// <summary>
+            /// Creates a new Processor from this builder
+            /// </summary>
+            /// <returns>the new Processor</returns>
             public Processor Build()
             {
                 return new Processor(this);

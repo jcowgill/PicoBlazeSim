@@ -20,19 +20,20 @@ namespace JCowgill.PicoBlazeSim
         public IList<IInstruction> Instructions { get; private set; }
 
         /// <summary>
-        /// Gets the dictionary of labels for this program
+        /// Gets the optional debug information attached to this program
         /// </summary>
-        public IDictionary<short, string> Labels { get; private set; }
+        public ProgramDebugInfo DebugInfo { get; private set; }
 
         /// <summary>
         /// Creates a new Program
         /// </summary>
         /// <param name="processor">the processor for this program</param>
         /// <param name="instructions">the program instructions</param>
-        /// <param name="labels">optional labels assigned to instructions</param>
+        /// <param name="debugInfo">optional program debug information</param>
         public Program(Processor processor, IList<IInstruction> instructions,
-                        IDictionary<short, string> labels = null)
+                        ProgramDebugInfo debugInfo = null)
         {
+            this.DebugInfo = debugInfo;
             this.Processor = processor;
 
             // Check instructions size
@@ -45,13 +46,6 @@ namespace JCowgill.PicoBlazeSim
             IInstruction[] instructionArray = new IInstruction[processor.RomSize];
             instructions.CopyTo(instructionArray, 0);
             this.Instructions = new ReadOnlyCollection<IInstruction>(instructionArray);
-
-            // Copy labels dictionary
-            if (labels == null)
-                this.Labels = new ReadOnlyDictionary<short, string>();
-            else
-                this.Labels = new ReadOnlyDictionary<short, string>(
-                                new Dictionary<short, string>(labels));
         }
     }
 }

@@ -16,6 +16,11 @@ namespace JCowgill.PicoBlazeSim.Import
         private List<IInstruction> store = new List<IInstruction>();
 
         /// <summary>
+        /// Dictionary of line numbers
+        /// </summary>
+        private Dictionary<short, int> lineNumbers = new Dictionary<short, int>();
+
+        /// <summary>
         /// Contains the list of fixups
         /// </summary>
         private List<Tuple<short, string>> fixups =
@@ -42,6 +47,7 @@ namespace JCowgill.PicoBlazeSim.Import
         /// Adds a new instruction to the program
         /// </summary>
         /// <param name="instruction">instruction to add</param>
+        /// <param name="line">optional line number for this instruction</param>
         /// <remarks>
         /// <para>The instruction is inserted at <see cref="Address"/> and <see cref="Address"/> is
         /// then incremented.</para>
@@ -51,7 +57,7 @@ namespace JCowgill.PicoBlazeSim.Import
         /// <exception cref="ImportException">
         /// If you attempt to "rewrite" an instruction
         /// </exception>
-        public void Add(IInstruction instruction)
+        public void Add(IInstruction instruction, int? line = null)
         {
             // Ensure store is large enough
             if (Address >= store.Count)
@@ -63,6 +69,10 @@ namespace JCowgill.PicoBlazeSim.Import
                 throw new ImportException("You cannot insert 2 instructions at the same address");
             }
 
+            // Store line number
+            if (line.HasValue)
+                lineNumbers[Address] = line.Value;
+
             // Insert instruction
             store[Address] = instruction;
             Address++;
@@ -73,17 +83,18 @@ namespace JCowgill.PicoBlazeSim.Import
         /// </summary>
         /// <param name="instruction">instruction to add</param>
         /// <param name="label">label to fixup</param>
+        /// <param name="line">optional line number for this instruction</param>
         /// <remarks>
         /// <para>This method allows you to defer the resolving of labels until after all the
         /// instructions have been generated.</para>
         /// <para>If a jump instruction does not need fixing up, you can just use
         /// <see cref="Add"/> instead</para>
         /// </remarks>
-        public void AddWithFixup(JumpCall instruction, string label)
+        public void AddWithFixup(JumpCall instruction, string label, int? line = null)
         {
             // Add instruction and fixup
             fixups.Add(Tuple.Create(this.Address, label));
-            Add(instruction);
+            Add(instruction, line);
         }
 
         /// <summary>
@@ -105,8 +116,9 @@ namespace JCowgill.PicoBlazeSim.Import
         /// Creates a program from the information in the program builder
         /// </summary>
         /// <param name="processor">processor to pass to the program</param>
+        /// <param name="keepDebugInfo">true to add a ProgramDebugInfo class to the Program</param>
         /// <returns>the created program</returns>
-        public Program CreateProgram(Processor processor)
+        public Program CreateProgram(Processor processor, bool keepDebugInfo = true)
         {
             // Resolve all fixups
             foreach (Tuple<short, string> fixup in fixups)
@@ -123,8 +135,13 @@ namespace JCowgill.PicoBlazeSim.Import
                 store[fixup.Item1] = new JumpCall(oldInstruction, destination);
             }
 
+            // Create debug info
+            ProgramDebugInfo debugInfo = null;
+            if (keepDebugInfo)
+                debugInfo = new ProgramDebugInfo(lineNumbers, labelsReversed);
+
             // Create program object
-            return new Program(processor, store, labelsReversed);
+            return new Program(processor, store, debugInfo);
         }
     }
 }

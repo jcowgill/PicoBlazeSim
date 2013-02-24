@@ -232,9 +232,9 @@ namespace JCowgill.PicoBlazeSim.Import
 
             // Add final statement
             if (type == SymbolType.Constant)
-                builder.Add(new BinaryConstant(op, left, right));
+                builder.Add(new BinaryConstant(op, left, right), current.LineNumber);
             else
-                builder.Add(new BinaryRegister(op, left, right));
+                builder.Add(new BinaryRegister(op, left, right), current.LineNumber);
         }
 
         /// <summary>
@@ -248,7 +248,7 @@ namespace JCowgill.PicoBlazeSim.Import
             ParseSmallSymbol(SymbolType.Register, out reg);
 
             // Create the shift statement based on register
-            builder.Add(new Shift(op, reg));
+            builder.Add(new Shift(op, reg), current.LineNumber);
         }
 
         /// <summary>
@@ -271,9 +271,9 @@ namespace JCowgill.PicoBlazeSim.Import
 
             // Add instruction
             if (symType == SymbolType.Label)
-                builder.AddWithFixup(new JumpCall(isCall, cond), labelName);
+                builder.AddWithFixup(new JumpCall(isCall, cond), labelName, current.LineNumber);
             else
-                builder.Add(new JumpCall(isCall, data, cond));
+                builder.Add(new JumpCall(isCall, data, cond), current.LineNumber);
         }
 
         /// <summary>
@@ -292,7 +292,7 @@ namespace JCowgill.PicoBlazeSim.Import
             ConsumeToken(TokenType.BraketClose);
 
             // Add instructions
-            builder.Add(new JumpCallIndirect(isCall, reg1, reg2));
+            builder.Add(new JumpCallIndirect(isCall, reg1, reg2), current.LineNumber);
         }
 
         /// <summary>
@@ -301,7 +301,7 @@ namespace JCowgill.PicoBlazeSim.Import
         private void ParseReturn()
         {
             // Create return based on conditional
-            builder.Add(new Return(ParseCondition()));
+            builder.Add(new Return(ParseCondition()), current.LineNumber);
         }
 
         /// <summary>
@@ -313,9 +313,9 @@ namespace JCowgill.PicoBlazeSim.Import
             string enableDisable = ConsumeWord().ToUpperInvariant();
 
             if (enableDisable == "ENABLE")
-                builder.Add(new ReturnInterrupt(true));
+                builder.Add(new ReturnInterrupt(true), current.LineNumber);
             else if (enableDisable == "DISABLE")
-                builder.Add(new ReturnInterrupt(false));
+                builder.Add(new ReturnInterrupt(false), current.LineNumber);
             else
                 throw new ImportException("Syntax error: " + enableDisable);
         }
@@ -331,7 +331,7 @@ namespace JCowgill.PicoBlazeSim.Import
                 throw new ImportException("Syntax error");
 
             // Add flag setting statement
-            builder.Add(new SetInterruptFlag(enable));
+            builder.Add(new SetInterruptFlag(enable), current.LineNumber);
         }
 
         /// <summary>
@@ -351,7 +351,7 @@ namespace JCowgill.PicoBlazeSim.Import
                 throw new ImportException("Invalid register bank: \"" + bankStr + "\"");
 
             // Add statement
-            builder.Add(new SetRegisterBank(alternateBank));
+            builder.Add(new SetRegisterBank(alternateBank), current.LineNumber);
         }
 
         /// <summary>
@@ -364,7 +364,7 @@ namespace JCowgill.PicoBlazeSim.Import
             ParseSmallSymbol(SymbolType.Register, out reg);
 
             // Add statement
-            builder.Add(new HwBuild(reg));
+            builder.Add(new HwBuild(reg), current.LineNumber);
         }
 
         /// <summary>
@@ -380,7 +380,7 @@ namespace JCowgill.PicoBlazeSim.Import
             ParseSmallSymbol(SymbolType.Constant, out port);
 
             // Add instructions
-            builder.Add(new OutputConstant(constant, port));
+            builder.Add(new OutputConstant(constant, port), current.LineNumber);
         }
 
         /// <summary>
@@ -623,12 +623,20 @@ namespace JCowgill.PicoBlazeSim.Import
             while (c > 0 && c != '\n' && c != '\r' && char.IsWhiteSpace((char) c))
                 c = input.Read();
 
+            // Get and update current line number
+            int line = current.LineNumber;
+
+            if (line == 0)
+                line = 1;
+            else if (current.Type == TokenType.NewLine)
+                line++;
+
             // What type of token?
             switch (c)
             {
                 case -1:
                     // EOF
-                    return new Token(TokenType.Eof);
+                    return new Token(TokenType.Eof, line);
 
                 case ';':
                     // Comment - skip this line and convert to newline
@@ -644,23 +652,23 @@ namespace JCowgill.PicoBlazeSim.Import
 
                 case '\n':
                     // Newline
-                    return new Token(TokenType.NewLine);
+                    return new Token(TokenType.NewLine, line);
 
                 case ',':
                     // Comma
-                    return new Token(TokenType.Comma);
+                    return new Token(TokenType.Comma, line);
 
                 case ':':
                     // Colon
-                    return new Token(TokenType.Colon);
+                    return new Token(TokenType.Colon, line);
 
                 case '(':
                     // BraketOpen
-                    return new Token(TokenType.BraketOpen);
+                    return new Token(TokenType.BraketOpen, line);
 
                 case ')':
                     // BraketClose
-                    return new Token(TokenType.BraketClose);
+                    return new Token(TokenType.BraketClose, line);
 
                 default:
                     // Identifier
@@ -682,7 +690,7 @@ namespace JCowgill.PicoBlazeSim.Import
                     }
 
                     // Return the token
-                    return new Token(TokenType.Word, builder.ToString());
+                    return new Token(TokenType.Word, line, builder.ToString());
             }
         }
 
@@ -703,11 +711,13 @@ namespace JCowgill.PicoBlazeSim.Import
         private struct Token
         {
             public readonly TokenType Type;
+            public readonly int LineNumber;
             public readonly string Data;
 
-            public Token(TokenType type, string data = null)
+            public Token(TokenType type, int line, string data = null)
             {
                 this.Type = type;
+                this.LineNumber = line;
                 this.Data = data;
             }
         }

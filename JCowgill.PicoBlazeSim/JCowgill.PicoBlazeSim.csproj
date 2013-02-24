@@ -68,6 +68,7 @@
     <Compile Include="ProcessorFlags.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Processor.cs" />
+    <Compile Include="ProgramDebugInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReadOnlyDictionary.cs" />
     <Compile Include="Simulation\IInputOutputManager.cs" />

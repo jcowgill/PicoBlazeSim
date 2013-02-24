@@ -180,6 +180,7 @@ namespace JCowgill.PicoBlazeSim.Simulation
             this.InterruptEnable = false;
             this.InterruptPending = false;
             this.ProgramCounter = 0;
+            this.UseAlternateRegisterBank = false;
             this.CallStack.Clear();
         }
 

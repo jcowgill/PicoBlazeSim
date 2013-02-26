@@ -44,7 +44,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Import\AssemblyImport.cs" />
+    <Compile Include="Import\AssemblyImporter.cs" />
+    <Compile Include="Import\AssemblyToken.cs" />
+    <Compile Include="Import\AssemblyTokenizer.cs" />
+    <Compile Include="Import\AssemblyTokenType.cs" />
     <Compile Include="Import\ImportException.cs" />
     <Compile Include="Import\ProgramBuilder.cs" />
     <Compile Include="Instructions\Binary.cs" />

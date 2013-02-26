@@ -3,14 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Text;
 
 namespace JCowgill.PicoBlazeSim.Import
 {
     /// <summary>
     /// Imports instructions from assembly code
     /// </summary>
-    public class AssemblyImport
+    public class AssemblyImporter
     {
         #region Fields
 
@@ -22,7 +21,7 @@ namespace JCowgill.PicoBlazeSim.Import
         /// <summary>
         /// Input stream
         /// </summary>
-        private readonly TextReader input;
+        private readonly AssemblyTokenizer tokenizer;
 
         /// <summary>
         /// Dictionary of constants and named registers (NOT labels)
@@ -30,49 +29,40 @@ namespace JCowgill.PicoBlazeSim.Import
         private Dictionary<string, Tuple<bool, short>> symbols =
             new Dictionary<string, Tuple<bool, short>>();
 
-        /// <summary>
-        /// Current token
-        /// </summary>
-        private Token current;
-
         #endregion
 
         #region Public Constructors + Methods
 
         /// <summary>
-        /// Creates a new AssemblyImport state
+        /// Creates a new AssemblyImporter state
         /// </summary>
         /// <param name="input">input stream</param>
-        public AssemblyImport(TextReader input)
+        public AssemblyImporter(TextReader input)
         {
-            this.input = input;
+            this.tokenizer = new AssemblyTokenizer(input);
         }
 
         /// <summary>
         /// Imports a program from an input stream
         /// </summary>
         /// <param name="input">input stream</param>
-        /// <param name="processor">processor used to create program from</param>
-        /// <returns>the imported program object</returns>
+        /// <returns>the imported program builder object</returns>
         /// <exception cref="ImportException">an error occured during the import</exception>
-        public static Program Import(TextReader input, Processor processor)
+        public static ProgramBuilder Import(TextReader input)
         {
-            return new AssemblyImport(input).Import(processor);
+            return new AssemblyImporter(input).Import();
         }
 
         /// <summary>
         /// Imports the program
         /// </summary>
-        /// <returns>the imported program object</returns>
-        /// <param name="processor">processor used to create program from</param>
+        /// <returns>the imported program builder object</returns>
         /// <exception cref="ImportException">an error occured during the import</exception>
-        public Program Import(Processor processor)
+        public ProgramBuilder Import()
         {
-            // Do top-level parsing
+            // Do top level parsing and return the final builder
             ParseTopLevel();
-
-            // Return generated program
-            return builder.CreateProgram(processor);
+            return builder;
         }
 
         #endregion
@@ -82,8 +72,8 @@ namespace JCowgill.PicoBlazeSim.Import
         /// <summary>
         /// Dictionary of keywords with the action which parses them
         /// </summary>
-        private static readonly Dictionary<string, Action<AssemblyImport>> Keywords =
-            new Dictionary<string, Action<AssemblyImport>>()
+        private static readonly Dictionary<string, Action<AssemblyImporter>> Keywords =
+            new Dictionary<string, Action<AssemblyImporter>>()
         {
             // Binary Instructions
             { "ADD",        x => x.ParseBinary(BinaryType.Add) },
@@ -143,42 +133,42 @@ namespace JCowgill.PicoBlazeSim.Import
         private void ParseTopLevel()
         {
             // Read first token
-            ConsumeToken();
+            tokenizer.ConsumeToken();
 
             // Start token loop
-            while (current.Type != TokenType.Eof)
+            while (tokenizer.Current.Type != AssemblyTokenType.Eof)
             {
-                if (current.Type == TokenType.NewLine)
+                if (tokenizer.Current.Type == AssemblyTokenType.NewLine)
                 {
-                    ConsumeToken();
+                    tokenizer.ConsumeToken();
                 }
-                else if (current.Type == TokenType.Word)
+                else if (tokenizer.Current.Type == AssemblyTokenType.Word)
                 {
-                    Action<AssemblyImport> parseFunc;
+                    Action<AssemblyImporter> parseFunc;
 
                     // Get word data
-                    string data = ConsumeWord();
+                    string data = tokenizer.ConsumeWord();
                     string upper = data.ToUpperInvariant();
 
                     // Test for keywords
                     if (Keywords.TryGetValue(upper, out parseFunc))
                     {
                         parseFunc(this);
-                        ConsumeEndOfStmt();
+                        tokenizer.ConsumeEndOfStmt();
                     }
                     else
                     {
                         // Label
 
                         // Next token must be a colon
-                        if (current.Type != TokenType.Colon)
+                        if (tokenizer.Current.Type != AssemblyTokenType.Colon)
                         {
                             throw new ImportException("Label \"" + data +
                                 "\" must be followed by a colon");
                         }
 
                         // Mark the label
-                        ConsumeToken();
+                        tokenizer.ConsumeToken();
                         builder.MarkLabel(data);
                         break;
                     }
@@ -186,7 +176,7 @@ namespace JCowgill.PicoBlazeSim.Import
                 else
                 {
                     // Syntax error
-                    char c = (current.Type == TokenType.Comma) ? ',' : ':';
+                    char c = (tokenizer.Current.Type == AssemblyTokenType.Comma) ? ',' : ':';
                     throw new ImportException("Syntax error " + c);
                 }
             }
@@ -202,7 +192,7 @@ namespace JCowgill.PicoBlazeSim.Import
             // Parse left side
             byte left;
             ParseSmallSymbol(SymbolType.Register, out left);
-            ConsumeToken(TokenType.Comma);
+            tokenizer.ConsumeToken(AssemblyTokenType.Comma);
 
             // Parse right side
             byte right;
@@ -211,12 +201,12 @@ namespace JCowgill.PicoBlazeSim.Import
             if (indirectRight)
             {
                 // Force register / constant depending on whether there are brakets
-                if (current.Type == TokenType.BraketOpen)
+                if (tokenizer.Current.Type == AssemblyTokenType.BraketOpen)
                 {
                     // Register
-                    ConsumeToken();
+                    tokenizer.ConsumeToken();
                     type = ParseSmallSymbol(SymbolType.Register, out right);
-                    ConsumeToken(TokenType.BraketClose);
+                    tokenizer.ConsumeToken(AssemblyTokenType.BraketClose);
                 }
                 else
                 {
@@ -232,9 +222,9 @@ namespace JCowgill.PicoBlazeSim.Import
 
             // Add final statement
             if (type == SymbolType.Constant)
-                builder.Add(new BinaryConstant(op, left, right), current.LineNumber);
+                AddInstruction(new BinaryConstant(op, left, right));
             else
-                builder.Add(new BinaryRegister(op, left, right), current.LineNumber);
+                AddInstruction(new BinaryRegister(op, left, right));
         }
 
         /// <summary>
@@ -248,7 +238,7 @@ namespace JCowgill.PicoBlazeSim.Import
             ParseSmallSymbol(SymbolType.Register, out reg);
 
             // Create the shift statement based on register
-            builder.Add(new Shift(op, reg), current.LineNumber);
+            AddInstruction(new Shift(op, reg));
         }
 
         /// <summary>
@@ -263,7 +253,7 @@ namespace JCowgill.PicoBlazeSim.Import
             // Get condition
             ConditionType cond = ParseCondition();
             if (cond != ConditionType.Unconditional)
-                ConsumeToken(TokenType.Comma);
+                tokenizer.ConsumeToken(AssemblyTokenType.Comma);
 
             // Get label / constant
             SymbolType symType = ParseSymbol(SymbolType.Constant | SymbolType.Label,
@@ -271,9 +261,9 @@ namespace JCowgill.PicoBlazeSim.Import
 
             // Add instruction
             if (symType == SymbolType.Label)
-                builder.AddWithFixup(new JumpCall(isCall, cond), labelName, current.LineNumber);
+                AddInstruction(new JumpCall(isCall, cond), labelName);
             else
-                builder.Add(new JumpCall(isCall, data, cond), current.LineNumber);
+                AddInstruction(new JumpCall(isCall, data, cond));
         }
 
         /// <summary>
@@ -285,14 +275,14 @@ namespace JCowgill.PicoBlazeSim.Import
             // Get both registers
             byte reg1, reg2;
 
-            ConsumeToken(TokenType.BraketOpen);
+            tokenizer.ConsumeToken(AssemblyTokenType.BraketOpen);
             ParseSmallSymbol(SymbolType.Register, out reg1);
-            ConsumeToken(TokenType.Comma);
+            tokenizer.ConsumeToken(AssemblyTokenType.Comma);
             ParseSmallSymbol(SymbolType.Register, out reg2);
-            ConsumeToken(TokenType.BraketClose);
+            tokenizer.ConsumeToken(AssemblyTokenType.BraketClose);
 
             // Add instructions
-            builder.Add(new JumpCallIndirect(isCall, reg1, reg2), current.LineNumber);
+            AddInstruction(new JumpCallIndirect(isCall, reg1, reg2));
         }
 
         /// <summary>
@@ -301,7 +291,7 @@ namespace JCowgill.PicoBlazeSim.Import
         private void ParseReturn()
         {
             // Create return based on conditional
-            builder.Add(new Return(ParseCondition()), current.LineNumber);
+            AddInstruction(new Return(ParseCondition()));
         }
 
         /// <summary>
@@ -310,12 +300,12 @@ namespace JCowgill.PicoBlazeSim.Import
         private void ParseReturnInterrupt()
         {
             // Read disable word
-            string enableDisable = ConsumeWord().ToUpperInvariant();
+            string enableDisable = tokenizer.ConsumeWord().ToUpperInvariant();
 
             if (enableDisable == "ENABLE")
-                builder.Add(new ReturnInterrupt(true), current.LineNumber);
+                AddInstruction(new ReturnInterrupt(true));
             else if (enableDisable == "DISABLE")
-                builder.Add(new ReturnInterrupt(false), current.LineNumber);
+                AddInstruction(new ReturnInterrupt(false));
             else
                 throw new ImportException("Syntax error: " + enableDisable);
         }
@@ -327,11 +317,11 @@ namespace JCowgill.PicoBlazeSim.Import
         private void ParseSetInterruptFlag(bool enable)
         {
             // Require the INTERRUPT keyword
-            if (ConsumeWord().ToUpperInvariant() != "INTERRUPT")
+            if (tokenizer.ConsumeWord().ToUpperInvariant() != "INTERRUPT")
                 throw new ImportException("Syntax error");
 
             // Add flag setting statement
-            builder.Add(new SetInterruptFlag(enable), current.LineNumber);
+            AddInstruction(new SetInterruptFlag(enable));
         }
 
         /// <summary>
@@ -340,7 +330,7 @@ namespace JCowgill.PicoBlazeSim.Import
         private void ParseSetRegisterBank()
         {
             // Which bank to set to
-            string bankStr = ConsumeWord().ToUpperInvariant();
+            string bankStr = tokenizer.ConsumeWord().ToUpperInvariant();
             bool alternateBank;
 
             if (bankStr == "A")
@@ -351,7 +341,7 @@ namespace JCowgill.PicoBlazeSim.Import
                 throw new ImportException("Invalid register bank: \"" + bankStr + "\"");
 
             // Add statement
-            builder.Add(new SetRegisterBank(alternateBank), current.LineNumber);
+            AddInstruction(new SetRegisterBank(alternateBank));
         }
 
         /// <summary>
@@ -364,7 +354,7 @@ namespace JCowgill.PicoBlazeSim.Import
             ParseSmallSymbol(SymbolType.Register, out reg);
 
             // Add statement
-            builder.Add(new HwBuild(reg), current.LineNumber);
+            AddInstruction(new HwBuild(reg));
         }
 
         /// <summary>
@@ -376,11 +366,11 @@ namespace JCowgill.PicoBlazeSim.Import
             byte constant, port;
 
             ParseSmallSymbol(SymbolType.Constant, out constant);
-            ConsumeToken(TokenType.Comma);
+            tokenizer.ConsumeToken(AssemblyTokenType.Comma);
             ParseSmallSymbol(SymbolType.Constant, out port);
 
             // Add instructions
-            builder.Add(new OutputConstant(constant, port), current.LineNumber);
+            AddInstruction(new OutputConstant(constant, port));
         }
 
         /// <summary>
@@ -392,10 +382,10 @@ namespace JCowgill.PicoBlazeSim.Import
             ConditionType condType;
 
             // Test for currect type and string
-            if (current.Type != TokenType.Word)
+            if (tokenizer.Current.Type != AssemblyTokenType.Word)
                 return ConditionType.Unconditional;
 
-            switch (current.Data.ToUpperInvariant())
+            switch (tokenizer.Current.Data.ToUpperInvariant())
             {
                 case "C":
                     condType = ConditionType.Carry;
@@ -419,7 +409,7 @@ namespace JCowgill.PicoBlazeSim.Import
             }
 
             // Consume this token before returning
-            ConsumeToken();
+            tokenizer.ConsumeToken();
             return condType;
         }
 
@@ -429,8 +419,8 @@ namespace JCowgill.PicoBlazeSim.Import
         private void ParseConstantDirective()
         {
             // Get name and constant
-            string name = ConsumeWord("Invalid constant name");
-            ConsumeToken(TokenType.Comma);
+            string name = tokenizer.ConsumeWord("Invalid constant name");
+            tokenizer.ConsumeToken(AssemblyTokenType.Comma);
 
             byte constant;
             ParseSmallSymbol(SymbolType.Constant, out constant);
@@ -445,8 +435,8 @@ namespace JCowgill.PicoBlazeSim.Import
         private void ParseNameRegDirective()
         {
             // Get name and register
-            string name = ConsumeWord("Invalid named register name");
-            ConsumeToken(TokenType.Comma);
+            string name = tokenizer.ConsumeWord("Invalid named register name");
+            tokenizer.ConsumeToken(AssemblyTokenType.Comma);
 
             byte register;
             ParseSmallSymbol(SymbolType.Register, out register);
@@ -464,6 +454,25 @@ namespace JCowgill.PicoBlazeSim.Import
             short addr;
             ParseSymbol(SymbolType.Constant, out addr);
             builder.Address = addr;
+        }
+
+        /// <summary>
+        /// Adds an instruction to the builder using the current line number
+        /// </summary>
+        /// <param name="instruction">instruction to add</param>
+        private void AddInstruction(IInstruction instruction)
+        {
+            builder.Add(instruction, tokenizer.Current.LineNumber);
+        }
+
+        /// <summary>
+        /// Adds an instruction to the builder using the current line number
+        /// </summary>
+        /// <param name="instruction">instruction to add</param>
+        /// <param name="label">label to jump to</param>
+        private void AddInstruction(JumpCall instruction, string label)
+        {
+            builder.AddWithFixup(instruction, label, tokenizer.Current.LineNumber);
         }
 
         #endregion
@@ -534,7 +543,7 @@ namespace JCowgill.PicoBlazeSim.Import
             Tuple<bool, short> symbol;
 
             // Get raw data
-            string symbolStr = ConsumeWord("Invalid symbol");
+            string symbolStr = tokenizer.ConsumeWord("Invalid symbol");
 
             // Try builtin registers and constants
             if (symbolStr[0] == 's' && short.TryParse(symbolStr.Substring(1), out data))
@@ -558,184 +567,6 @@ namespace JCowgill.PicoBlazeSim.Import
 
             rawString = symbolStr;
             return symType;
-        }
-
-        #endregion
-
-        #region Tokenizer
-
-        /// <summary>
-        /// Consumes the current token
-        /// </summary>
-        private void ConsumeToken()
-        {
-            current = NextToken();
-        }
-
-        /// <summary>
-        /// Consumes a word and returns its data
-        /// </summary>
-        /// <returns>data in the word token</returns>
-        private string ConsumeWord(string errStr = "Syntax error")
-        {
-            // Get data and consume token
-            string data = current.Data;
-            ConsumeToken(TokenType.Word, errStr);
-            return data;
-        }
-
-        /// <summary>
-        /// Consumes a token or throws an exception
-        /// </summary>
-        private void ConsumeToken(TokenType token, string errStr = "Syntax error")
-        {
-            // Test if it is actually that token
-            if (current.Type != token)
-                throw new ImportException(errStr);
-
-            // Consume token
-            ConsumeToken();
-        }
-
-        /// <summary>
-        /// Consumes a newline or an eof
-        /// </summary>
-        private void ConsumeEndOfStmt(string errStr = "Syntax error")
-        {
-            // Test token type
-            if (current.Type != TokenType.Eof && current.Type != TokenType.NewLine)
-                throw new ImportException(errStr);
-
-            // Consume token
-            ConsumeToken();
-        }
-
-        /// <summary>
-        /// Returns the next token in the input stream
-        /// </summary>
-        /// <returns>the next token</returns>
-        /// <exception cref="ImportException">Thrown if a lexical error occured</exception>
-        private Token NextToken()
-        {
-            int c = input.Read();
-
-            // Skip leading whitespace
-            while (c > 0 && c != '\n' && c != '\r' && char.IsWhiteSpace((char) c))
-                c = input.Read();
-
-            // Get and update current line number
-            int line = current.LineNumber;
-
-            if (line == 0)
-                line = 1;
-            else if (current.Type == TokenType.NewLine)
-                line++;
-
-            // What type of token?
-            switch (c)
-            {
-                case -1:
-                    // EOF
-                    return new Token(TokenType.Eof, line);
-
-                case ';':
-                    // Comment - skip this line and convert to newline
-                    input.ReadLine();
-                    goto case '\n';
-
-                case '\r':
-                    // Skip \n if possible
-                    if (input.Peek() == '\n')
-                        input.Read();
-
-                    goto case '\n';
-
-                case '\n':
-                    // Newline
-                    return new Token(TokenType.NewLine, line);
-
-                case ',':
-                    // Comma
-                    return new Token(TokenType.Comma, line);
-
-                case ':':
-                    // Colon
-                    return new Token(TokenType.Colon, line);
-
-                case '(':
-                    // BraketOpen
-                    return new Token(TokenType.BraketOpen, line);
-
-                case ')':
-                    // BraketClose
-                    return new Token(TokenType.BraketClose, line);
-
-                default:
-                    // Identifier
-                    StringBuilder builder = new StringBuilder();
-
-                    // First char must be a letter
-                    if (!IsIdentifierChar(c))
-                        throw new ImportException("Lexical error (" + (char) c + ")");
-
-                    // Get all the characters until we hit an invalid one
-                    builder.Append((char) c);
-                    c = input.Peek();
-
-                    while (IsIdentifierChar(c))
-                    {
-                        builder.Append((char) c);
-                        input.Read();
-                        c = input.Peek();
-                    }
-
-                    // Return the token
-                    return new Token(TokenType.Word, line, builder.ToString());
-            }
-        }
-
-        /// <summary>
-        /// Returns true if the given character is valid for an identifier
-        /// </summary>
-        /// <param name="c">character to test</param>
-        /// <returns>true if the character is valid</returns>
-        private static bool IsIdentifierChar(int c)
-        {
-            return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
-                    (c >= '0' && c <= '9') || c == '_';
-        }
-
-        /// <summary>
-        /// Structure containing information about a token
-        /// </summary>
-        private struct Token
-        {
-            public readonly TokenType Type;
-            public readonly int LineNumber;
-            public readonly string Data;
-
-            public Token(TokenType type, int line, string data = null)
-            {
-                this.Type = type;
-                this.LineNumber = line;
-                this.Data = data;
-            }
-        }
-
-        /// <summary>
-        /// Types of token which can be generated
-        /// </summary>
-        private enum TokenType
-        {
-            Eof,
-            NewLine,
-
-            Comma,
-            Colon,
-            BraketOpen,
-            BraketClose,
-
-            Word,
         }
 
         #endregion

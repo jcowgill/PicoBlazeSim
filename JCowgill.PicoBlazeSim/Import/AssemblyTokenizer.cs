@@ -132,7 +132,7 @@ namespace JCowgill.PicoBlazeSim.Import
 
                     // First char must be a letter
                     if (!IsIdentifierChar(c))
-                        throw new ImportException("Lexical error (" + (char) c + ")");
+                        throw new ImportException.Fatal("Lexical error (" + (char) c + ")");
 
                     // Get all the characters until we hit an invalid one
                     builder.Append((char) c);

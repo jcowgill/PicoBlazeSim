@@ -13,9 +13,16 @@ namespace JCowgill.PicoBlazeSim.Import
         {
         }
 
-        public ImportException(string msg, Exception inner)
-            : base(msg, inner)
+        /// <summary>
+        /// Fatal version of ImportException
+        /// </summary>
+        [Serializable]
+        public class Fatal : ImportException
         {
+            public Fatal(string msg)
+                : base(msg)
+            {
+            }
         }
     }
 }

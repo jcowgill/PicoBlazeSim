@@ -12,6 +12,7 @@ namespace JCowgill.PicoBlazeSim.Export
         /// </summary>
         /// <param name="program">program to export</param>
         /// <param name="stream">stream to export to</param>
+        /// <exception cref="ExportException">thrown if there's an error during the export</exception>
         void Export(Program program, Stream stream);
     }
 }

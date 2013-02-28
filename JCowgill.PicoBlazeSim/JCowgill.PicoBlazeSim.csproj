@@ -44,8 +44,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Export\AssemblyExporter.cs" />
     <Compile Include="Export\DebugExporter.cs" />
     <Compile Include="Export\IExporter.cs" />
+    <Compile Include="Export\ExportException.cs" />
     <Compile Include="Export\TextExporter.cs" />
     <Compile Include="Import\AssemblyImporter.cs" />
     <Compile Include="Import\AssemblyToken.cs" />

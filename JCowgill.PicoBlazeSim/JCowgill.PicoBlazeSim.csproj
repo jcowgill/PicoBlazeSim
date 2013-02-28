@@ -44,6 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Export\DebugExporter.cs" />
+    <Compile Include="Export\IExporter.cs" />
+    <Compile Include="Export\TextExporter.cs" />
     <Compile Include="Import\AssemblyImporter.cs" />
     <Compile Include="Import\AssemblyToken.cs" />
     <Compile Include="Import\AssemblyTokenizer.cs" />
@@ -84,9 +87,6 @@
     <Compile Include="Simulation\SerialIoManager.cs" />
     <Compile Include="Simulation\SimulationException.cs" />
     <Compile Include="Simulation\SimulationStack.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Export\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

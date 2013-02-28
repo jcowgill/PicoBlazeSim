@@ -50,7 +50,10 @@ namespace JCowgill.PicoBlazeSim.Export
                 {
                     // Add blank line if there was a gap
                     if (hasGap)
+                    {
                         writer.WriteLine();
+                        hasGap = false;
+                    }
 
                     // Labels here?
                     string label;

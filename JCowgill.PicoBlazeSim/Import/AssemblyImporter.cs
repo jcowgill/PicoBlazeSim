@@ -589,7 +589,8 @@ namespace JCowgill.PicoBlazeSim.Import
             string symbolStr = tokenizer.ConsumeWord("Invalid symbol");
 
             // Try builtin registers and constants
-            if (symbolStr[0] == 's' && short.TryParse(symbolStr.Substring(1), out data))
+            if ((symbolStr[0] == 's' || symbolStr[0] == 'S') &&
+                short.TryParse(symbolStr.Substring(1), NumberStyles.HexNumber, null, out data))
             {
                 symType = SymbolType.Register;
             }

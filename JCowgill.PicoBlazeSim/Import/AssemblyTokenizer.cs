@@ -27,9 +27,8 @@ namespace JCowgill.PicoBlazeSim.Import
         /// <param name="input">input stream to read tokens from</param>
         public AssemblyTokenizer(TextReader input)
         {
-            // Get the first token
             this.input = input;
-            ConsumeToken();
+            this.Current = new AssemblyToken(AssemblyTokenType.NewLine, 0);
         }
 
         /// <summary>
@@ -95,9 +94,7 @@ namespace JCowgill.PicoBlazeSim.Import
             // Get and update current line number
             int line = Current.LineNumber;
 
-            if (line == 0)
-                line = 1;
-            else if (Current.Type == AssemblyTokenType.NewLine)
+            if (Current.Type == AssemblyTokenType.NewLine)
                 line++;
 
             // What type of token?

@@ -29,8 +29,8 @@ namespace JCowgill.PicoBlazeSim
 
         public static readonly Processor PicoBlazeII = new Builder()
         {
-            RomSize = 256,
-            InterruptVector = 0xFF,
+            RomSize = 1024,
+            InterruptVector = 0x3FF,
             RegisterCount = 32,
             StackSize = 31,
 

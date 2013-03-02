@@ -56,9 +56,11 @@
     <Compile Include="Import\AssemblyToken.cs" />
     <Compile Include="Import\AssemblyTokenizer.cs" />
     <Compile Include="Import\AssemblyTokenType.cs" />
+    <Compile Include="Import\HexImporter.cs" />
     <Compile Include="Import\ImportError.cs" />
     <Compile Include="Import\ImportErrorList.cs" />
     <Compile Include="Import\ImportException.cs" />
+    <Compile Include="Import\InstructionDisassembler.cs" />
     <Compile Include="Import\ProgramBuilder.cs" />
     <Compile Include="Instructions\Binary.cs" />
     <Compile Include="Instructions\BinaryConstant.cs" />

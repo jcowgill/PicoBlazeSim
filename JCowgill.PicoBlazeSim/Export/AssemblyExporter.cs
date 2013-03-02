@@ -212,7 +212,7 @@ namespace JCowgill.PicoBlazeSim.Export
                 string pattern;
 
                 if (!isReg)
-                    pattern = "\t{0} s{1:X}, {2:X}";
+                    pattern = "\t{0} s{1:X}, {2:X2}";
                 else if (!indirectRightReg)
                     pattern = "\t{0} s{1:X}, s{2:X}";
                 else
@@ -312,7 +312,7 @@ namespace JCowgill.PicoBlazeSim.Export
 
             public void Visit(Instructions.OutputConstant instruction)
             {
-                writer.WriteLine("\tOUTPUTK {0:X}, {1:X}", instruction.Constant, instruction.Port);
+                writer.WriteLine("\tOUTPUTK {0:X}, {1:X2}", instruction.Constant, instruction.Port);
             }
         }
 

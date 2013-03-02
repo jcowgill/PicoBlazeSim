@@ -309,7 +309,7 @@ namespace JCowgill.PicoBlazeSim.Import
 
                         break;
 
-                    case 2:
+                    case 1:
                         return new JumpCall(false, (byte) i, GetCondition(i));
 
                     case 3:

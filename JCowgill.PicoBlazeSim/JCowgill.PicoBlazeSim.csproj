@@ -46,7 +46,7 @@
   <ItemGroup>
     <Compile Include="Export\AssemblyExporter.cs" />
     <Compile Include="Export\VhdlExporter.cs" />
-    <Compile Include="Export\InstructionCompiler.cs" />
+    <Compile Include="Export\InstructionAssembler.cs" />
     <Compile Include="Export\HexExporter.cs" />
     <Compile Include="Export\DebugExporter.cs" />
     <Compile Include="Export\IExporter.cs" />

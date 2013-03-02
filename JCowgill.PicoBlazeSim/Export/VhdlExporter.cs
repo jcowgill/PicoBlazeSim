@@ -30,7 +30,7 @@ namespace JCowgill.PicoBlazeSim.Export
                 throw new ExportException("VhdlExporter currently only supports the PicoBlaze 1");
 
             // Create new compiler
-            InstructionCompiler compiler = new InstructionCompiler(program.Processor);
+            InstructionAssembler compiler = new InstructionAssembler(program.Processor);
 
             // Create hex lines
             StringBuilder[] hexLines = new StringBuilder[16];
@@ -50,7 +50,7 @@ namespace JCowgill.PicoBlazeSim.Export
                 if (program.Instructions[i] == null)
                     result = 0;
                 else
-                    result = compiler.Compile(program.Instructions[i]);
+                    result = compiler.Assemble(program.Instructions[i]);
 
                 // Write result
                 hexLines[i / 16].Append(result.ToString("X4"));

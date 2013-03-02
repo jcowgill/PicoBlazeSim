@@ -11,7 +11,7 @@ namespace JCowgill.PicoBlazeSim.Export
         public override void Export(Program program, TextWriter writer)
         {
             // Create new compiler
-            InstructionCompiler compiler = new InstructionCompiler(program.Processor);
+            InstructionAssembler compiler = new InstructionAssembler(program.Processor);
             string hexPattern = compiler.WideInstructions ? "{0:X5}" : "{0:X4}";
 
             // Compile each instruction and write as hex
@@ -23,7 +23,7 @@ namespace JCowgill.PicoBlazeSim.Export
                 if (program.Instructions[i] == null)
                     result = 0;
                 else
-                    result = compiler.Compile(program.Instructions[i]);
+                    result = compiler.Assemble(program.Instructions[i]);
 
                 // Write result
                 writer.WriteLine(hexPattern, result);

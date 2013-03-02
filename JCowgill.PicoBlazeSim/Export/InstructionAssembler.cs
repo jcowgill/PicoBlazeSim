@@ -3,28 +3,28 @@
 namespace JCowgill.PicoBlazeSim.Export
 {
     /// <summary>
-    /// Compiles instructions into their binary format
+    /// Assembles instructions into their binary format
     /// </summary>
     /// <remarks>
     /// Unlike the text exporters, the results of this will vary widely between processors
     /// </remarks>
-    public class InstructionCompiler
+    public class InstructionAssembler
     {
         private readonly Visitor visitor;
         private readonly int processorNumber;   // Processor number used for lookup tables
 
         /// <summary>
-        /// Gets the last instruction compiled
+        /// Gets the last instruction assembled
         /// </summary>
         public int LastInstruction { get; private set; }
 
         /// <summary>
-        /// Gets the processor used by this compiler
+        /// Gets the processor used by this assembler
         /// </summary>
         public Processor Processor { get; private set; }
 
         /// <summary>
-        /// True if the compiler is producing 18-bit instructions (instead of 16-bit)
+        /// True if the assembler is producing 18-bit instructions (instead of 16-bit)
         /// </summary>
         public bool WideInstructions
         {
@@ -37,10 +37,10 @@ namespace JCowgill.PicoBlazeSim.Export
         }
 
         /// <summary>
-        /// Creates a new InstructionCompiler for the given processor
+        /// Creates a new InstructionAssembler for the given processor
         /// </summary>
-        /// <param name="processor">processor to compile for (only built-in processors)</param>
-        public InstructionCompiler(Processor processor)
+        /// <param name="processor">processor to assemble for (only built-in processors)</param>
+        public InstructionAssembler(Processor processor)
         {
             // Find processor number
             if (processor == PicoBlazeSim.Processor.PicoBlazeCpld)
@@ -62,26 +62,26 @@ namespace JCowgill.PicoBlazeSim.Export
         }
 
         /// <summary>
-        /// Compiles the given instruction
+        /// Assembles the given instruction
         /// </summary>
-        /// <param name="instruction">instruction to compile</param>
+        /// <param name="instruction">instruction to assemble</param>
         /// <remarks>
-        /// The compiler assumes the instructions provided are valid on the current processor
+        /// The assembler assumes the instructions provided are valid on the current processor
         /// </remarks>
         /// <returns>the binary version of that instruction on the current processor</returns>
-        public int Compile(IInstruction instruction)
+        public int Assemble(IInstruction instruction)
         {
-            // Compile and return last instruction
+            // Assemble and return last instruction
             instruction.Accept(visitor);
             return LastInstruction;
         }
 
         /// <summary>
-        /// Visitor used to compile instructions
+        /// Visitor used to assemble instructions
         /// </summary>
         private class Visitor : IInstructionVisitor
         {
-            private readonly InstructionCompiler parent;
+            private readonly InstructionAssembler parent;
 
             /// <summary>
             /// Lookup table for the shift opcode
@@ -179,10 +179,10 @@ namespace JCowgill.PicoBlazeSim.Export
             };
 
             /// <summary>
-            /// Creates a new Visitor for the InstructionCompiler
+            /// Creates a new Visitor for the InstructionAssembler
             /// </summary>
-            /// <param name="parent">parent compiler</param>
-            public Visitor(InstructionCompiler parent)
+            /// <param name="parent">parent assembler</param>
+            public Visitor(InstructionAssembler parent)
             {
                 this.parent = parent;
             }

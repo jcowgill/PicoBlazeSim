@@ -11,50 +11,6 @@ namespace JCowgill.PicoBlazeSim.Import
     /// </summary>
     internal class AssemblyImporterState
     {
-        #region Public Importer
-
-        /// <summary>
-        /// Imports and validates an assembly program
-        /// </summary>
-        /// <param name="input">input reader where data is read from</param>
-        /// <param name="errors">error list where errors are written to</param>
-        /// <param name="processor">processor to use</param>
-        /// <param name="keepDebugInfo">true to keep debug info in the final program</param>
-        /// <returns>the imported program if there were no errors</returns>
-        public static Program Import(TextReader input, ImportErrorList errors, Processor processor,
-                                    bool keepDebugInfo = true)
-        {
-            // Create importer state
-            AssemblyImporterState importer = new AssemblyImporterState(input, errors);
-
-            // Do top level parsing
-            importer.ParseTopLevel();
-
-            // Check for errors
-            if (errors.ErrorCount > 0)
-                return null;
-
-            // Create program
-            Program program;
-
-            try
-            {
-                program = importer.builder.CreateProgram(processor, keepDebugInfo);
-            }
-            catch (ImportException e)
-            {
-                // Add to error list
-                errors.AddError(e.Message);
-                return null;
-            }
-
-            // Validate program
-            ProgramValidator.Validate(program, errors);
-            return (errors.ErrorCount == 0) ? program : null;
-        }
-
-        #endregion
-
         #region Fields
 
         /// <summary>
@@ -91,6 +47,14 @@ namespace JCowgill.PicoBlazeSim.Import
         {
             this.errorList = errors;
             this.tokenizer = new AssemblyTokenizer(input);
+        }
+
+        /// <summary>
+        /// Gets the builder used by the importer
+        /// </summary>
+        public ProgramBuilder Builder
+        {
+            get { return builder; }
         }
 
         #endregion
@@ -158,7 +122,7 @@ namespace JCowgill.PicoBlazeSim.Import
         /// <summary>
         /// Parses the top-level assembly file
         /// </summary>
-        private void ParseTopLevel()
+        public void ParseTopLevel()
         {
             // Start token loop
             while (tokenizer.Current.Type != AssemblyTokenType.Eof)

@@ -51,11 +51,13 @@
     <Compile Include="Export\DebugExporter.cs" />
     <Compile Include="Export\IExporter.cs" />
     <Compile Include="Export\ExportException.cs" />
+    <Compile Include="Import\AbstractImporter.cs" />
     <Compile Include="Import\AssemblyImporterState.cs" />
     <Compile Include="Import\AssemblyToken.cs" />
     <Compile Include="Import\AssemblyTokenizer.cs" />
     <Compile Include="Import\AssemblyTokenType.cs" />
     <Compile Include="Import\HexImporter.cs" />
+    <Compile Include="Import\IImporter.cs" />
     <Compile Include="Import\ImportError.cs" />
     <Compile Include="Import\ImportErrorList.cs" />
     <Compile Include="Import\ImportException.cs" />

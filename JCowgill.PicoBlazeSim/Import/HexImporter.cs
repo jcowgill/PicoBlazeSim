@@ -6,19 +6,22 @@ namespace JCowgill.PicoBlazeSim.Import
     /// <summary>
     /// Imports instructions from a hex dump (one per line)
     /// </summary>
-    public static class HexImporter
+    public class HexImporter : AbstractImporter
     {
         /// <summary>
-        /// Imports and validates a program stored as hex program
+        /// Creates a new HexImporter
         /// </summary>
-        /// <param name="input">input reader where data is read from</param>
-        /// <param name="errors">error list where errors are written to</param>
-        /// <param name="processor">processor to use</param>
-        /// <returns>the imported program if there were no errors</returns>
-        public static Program Import(TextReader input, ImportErrorList errors, Processor processor)
+        /// <param name="processor">processor this importer uses</param>
+        /// <param name="keepDebugInfo">true to keep debug information</param>
+        public HexImporter(Processor processor, bool keepDebugInfo = true)
+            : base(processor, keepDebugInfo)
+        {
+        }
+
+        protected override ProgramBuilder ImportBuilder(TextReader input, ImportErrorList errors)
         {
             // Create disassembler and builder
-            InstructionDisassembler disasm = InstructionDisassembler.Create(processor);
+            InstructionDisassembler disasm = InstructionDisassembler.Create(Processor);
             ProgramBuilder builder = new ProgramBuilder();
 
             // Disassemble each instruction and add to the builder
@@ -51,27 +54,7 @@ namespace JCowgill.PicoBlazeSim.Import
                 }
             }
 
-            // Exit if there were errors
-            if (errors.ErrorCount > 0)
-                return null;
-
-            // Finish building
-            Program program;
-
-            try
-            {
-                program = builder.CreateProgram(processor, false);
-            }
-            catch (ImportException e)
-            {
-                // Report and exit
-                errors.AddError(e.Message);
-                return null;
-            }
-
-            // Validate
-            ProgramValidator.Validate(program, errors);
-            return (errors.ErrorCount == 0) ? program : null;
+            return builder;
         }
     }
 }

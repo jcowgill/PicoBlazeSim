@@ -9,7 +9,7 @@ namespace JCowgill.PicoBlazeSim.Import
     /// <summary>
     /// Imports instructions from assembly code
     /// </summary>
-    public class AssemblyImporter
+    internal class AssemblyImporterState
     {
         #region Public Importer
 
@@ -25,7 +25,7 @@ namespace JCowgill.PicoBlazeSim.Import
                                     bool keepDebugInfo = true)
         {
             // Create importer state
-            AssemblyImporter importer = new AssemblyImporter(input, errors);
+            AssemblyImporterState importer = new AssemblyImporterState(input, errors);
 
             // Do top level parsing
             importer.ParseTopLevel();
@@ -87,7 +87,7 @@ namespace JCowgill.PicoBlazeSim.Import
         /// </summary>
         /// <param name="input">input stream</param>
         /// <param name="errors">error list</param>
-        private AssemblyImporter(TextReader input, ImportErrorList errors)
+        public AssemblyImporterState(TextReader input, ImportErrorList errors)
         {
             this.errorList = errors;
             this.tokenizer = new AssemblyTokenizer(input);
@@ -100,8 +100,8 @@ namespace JCowgill.PicoBlazeSim.Import
         /// <summary>
         /// Dictionary of keywords with the action which parses them
         /// </summary>
-        private static readonly Dictionary<string, Action<AssemblyImporter>> Keywords =
-            new Dictionary<string, Action<AssemblyImporter>>()
+        private static readonly Dictionary<string, Action<AssemblyImporterState>> Keywords =
+            new Dictionary<string, Action<AssemblyImporterState>>()
         {
             // Binary Instructions
             { "ADD",        x => x.ParseBinary(BinaryType.Add) },
@@ -171,7 +171,7 @@ namespace JCowgill.PicoBlazeSim.Import
                     }
                     else if (tokenizer.Current.Type == AssemblyTokenType.Word)
                     {
-                        Action<AssemblyImporter> parseFunc;
+                        Action<AssemblyImporterState> parseFunc;
 
                         // Get word data
                         string data = tokenizer.ConsumeWord();

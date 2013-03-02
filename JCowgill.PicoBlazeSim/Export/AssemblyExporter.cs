@@ -11,7 +11,7 @@ namespace JCowgill.PicoBlazeSim.Export
     /// <para>Any labels provided are used, but any jump destination without a label will have
     /// one generated for it</para>
     /// </remarks>
-    public class AssemblyExporter : TextExporter
+    public class AssemblyExporter : IExporter
     {
         /// <summary>
         /// Generates the list of labels for the program
@@ -47,7 +47,7 @@ namespace JCowgill.PicoBlazeSim.Export
         /// </summary>
         /// <param name="program">program to export</param>
         /// <param name="writer">text writer to export to</param>
-        public override void Export(Program program, TextWriter writer)
+        public void Export(Program program, TextWriter writer)
         {
             // Get labels dictionary
             Dictionary<short, string> labels = GenerateLabels(program);

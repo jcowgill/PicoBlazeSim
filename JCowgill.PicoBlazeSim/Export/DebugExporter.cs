@@ -9,7 +9,7 @@ namespace JCowgill.PicoBlazeSim.Export
     /// <remarks>
     /// Will include labels and line numbers if given in the program
     /// </remarks>
-    public class DebugExporter : TextExporter
+    public class DebugExporter : IExporter
     {
         /// <summary>
         /// Creates an empty ProgramDebugInfo object if the given debug info is null
@@ -33,7 +33,7 @@ namespace JCowgill.PicoBlazeSim.Export
         /// </summary>
         /// <param name="program">program to export</param>
         /// <param name="writer">text writer to export to</param>
-        public override void Export(Program program, TextWriter writer)
+        public void Export(Program program, TextWriter writer)
         {
             // Get debug information
             ProgramDebugInfo debugInfo = GetNotNull(program.DebugInfo);

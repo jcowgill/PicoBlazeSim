@@ -6,9 +6,9 @@ namespace JCowgill.PicoBlazeSim.Export
     /// <summary>
     /// Exporter which outputs each instruction in hex - one per line
     /// </summary>
-    public class HexExporter : TextExporter
+    public class HexExporter : IExporter
     {
-        public override void Export(Program program, TextWriter writer)
+        public void Export(Program program, TextWriter writer)
         {
             // Create new compiler
             InstructionAssembler compiler = new InstructionAssembler(program.Processor);

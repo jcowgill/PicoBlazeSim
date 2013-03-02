@@ -7,7 +7,7 @@ namespace JCowgill.PicoBlazeSim.Export
     /// <summary>
     /// Exporter which outputs a VHDL file containing the program ROM
     /// </summary>
-    public class VhdlExporter : TextExporter
+    public class VhdlExporter : IExporter
     {
         /// <summary>
         /// Gets the name of the entity to use
@@ -23,7 +23,7 @@ namespace JCowgill.PicoBlazeSim.Export
             this.EntityName = name;
         }
 
-        public override void Export(Program program, TextWriter writer)
+        public void Export(Program program, TextWriter writer)
         {
             // Only PicoBlaze currently supported
             if (program.Processor != Processor.PicoBlaze)

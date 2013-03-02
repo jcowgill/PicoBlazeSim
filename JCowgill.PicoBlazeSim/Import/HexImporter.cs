@@ -12,9 +12,8 @@ namespace JCowgill.PicoBlazeSim.Import
         /// Creates a new HexImporter
         /// </summary>
         /// <param name="processor">processor this importer uses</param>
-        /// <param name="keepDebugInfo">true to keep debug information</param>
-        public HexImporter(Processor processor, bool keepDebugInfo = true)
-            : base(processor, keepDebugInfo)
+        public HexImporter(Processor processor)
+            : base(processor, false)
         {
         }
 

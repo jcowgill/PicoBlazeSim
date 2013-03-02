@@ -202,24 +202,21 @@ namespace JCowgill.PicoBlazeSim.Export
             {
                 int opcode = ReadOpcodeTable(BinaryConstantOpcode, (int) instruction.Type);
 
-                parent.LastInstruction = opcode | (int) (instruction.Left << 8)
-                                                | (int) instruction.Right;
+                parent.LastInstruction = opcode | instruction.Left << 8 | instruction.Right;
             }
 
             public void Visit(Instructions.BinaryRegister instruction)
             {
                 int opcode = ReadOpcodeTable(BinaryRegisterOpcode, (int) instruction.Type);
 
-                parent.LastInstruction = opcode | (int) (instruction.Left << 8)
-                                                | (int) (instruction.Right << 4);
+                parent.LastInstruction = opcode | instruction.Left << 8 | instruction.Right << 4;
             }
 
             public void Visit(Instructions.Shift instruction)
             {
                 // Or opcode with register, shift left and or with shift type
-                parent.LastInstruction =
-                    (int) ((ShiftOpcode[parent.processorNumber] | instruction.Register) << 8) |
-                    (int) instruction.Type;
+                parent.LastInstruction = ShiftOpcode[parent.processorNumber] |
+                    instruction.Register << 8 | (int) instruction.Type;
             }
 
             public void Visit(Instructions.Return instruction)
@@ -262,19 +259,18 @@ namespace JCowgill.PicoBlazeSim.Export
             {
                 int opcode = instruction.IsCall ? 0x24000 : 0x26000;
 
-                parent.LastInstruction = opcode | (int) (instruction.Register1 << 8)
-                                                | (int) (instruction.Register2 << 4);
+                parent.LastInstruction = opcode | instruction.Register1 << 8
+                                                | instruction.Register2 << 4;
             }
 
             public void Visit(Instructions.HwBuild instruction)
             {
-                parent.LastInstruction = 0x14080 | (int) (instruction.Register << 8);
+                parent.LastInstruction = 0x14080 | instruction.Register << 8;
             }
 
             public void Visit(Instructions.OutputConstant instruction)
             {
-                parent.LastInstruction = 0x2B000 | (int) (instruction.Constant << 4) |
-                                                    instruction.Port;
+                parent.LastInstruction = 0x2B000 | instruction.Constant << 4 | instruction.Port;
             }
         }
     }

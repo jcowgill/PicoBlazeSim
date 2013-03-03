@@ -65,7 +65,7 @@ namespace JCowgill.PicoBlazeSim.Export
             writer.WriteLine(VhdlSkeleton2);
 
             for (int i = 0; i < 16; i++)
-                writer.WriteLine(VhdlSkeletonLine2, i, hexLines[i]);
+                writer.WriteLine(VhdlSkeletonLine2, i, hexLines[i], (i == 15) ? ")" : ",");
 
             writer.WriteLine(VhdlSkeleton3);
         }
@@ -122,7 +122,7 @@ BEGIN
     GENERIC MAP (";
 
         private static readonly string VhdlSkeletonLine2 =
-            "        INIT_{0:X2} => X\"{1}\"";
+            "        INIT_{0:X2} => X\"{1}\"{2}";
 
         private static readonly string VhdlSkeleton3 =
 @"    --translate_on

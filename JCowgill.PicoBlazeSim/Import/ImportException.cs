@@ -8,21 +8,20 @@ namespace JCowgill.PicoBlazeSim.Import
     [Serializable]
     public class ImportException : Exception
     {
-        public ImportException(string msg)
-            : base(msg)
-        {
-        }
+        /// <summary>
+        /// True if this exception is fatal
+        /// </summary>
+        public bool IsFatal { get; private set; }
 
         /// <summary>
-        /// Fatal version of ImportException
+        /// Creates a new ImportException
         /// </summary>
-        [Serializable]
-        public class Fatal : ImportException
+        /// <param name="msg">exception message</param>
+        /// <param name="fatal">true if the exception is fatal</param>
+        public ImportException(string msg, bool fatal = false)
+            : base(msg)
         {
-            public Fatal(string msg)
-                : base(msg)
-            {
-            }
+            this.IsFatal = fatal;
         }
     }
 }

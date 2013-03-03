@@ -168,16 +168,14 @@ namespace JCowgill.PicoBlazeSim.Import
                         throw new ImportException("Syntax error " + tokenizer.Current.Type);
                     }
                 }
-                catch (ImportException.Fatal e)
-                {
-                    // Convert exception into an error and add to the list
-                    errorList.AddError(e.Message, tokenizer.Current.LineNumber);
-                    return;
-                }
                 catch (ImportException e)
                 {
                     // Convert exception into an error and add to the list
                     errorList.AddError(e.Message, tokenizer.Current.LineNumber);
+
+                    // Return if the error is fatal
+                    if (e.IsFatal)
+                        return;
 
                     // Skip all tokens until a new line
                     while (tokenizer.Current.Type != AssemblyTokenType.NewLine)
@@ -186,12 +184,11 @@ namespace JCowgill.PicoBlazeSim.Import
                         {
                             tokenizer.ConsumeToken();
                         }
-                        catch (ImportException.Fatal)
+                        catch (ImportException e2)
                         {
-                            return;
-                        }
-                        catch (ImportException)
-                        {
+                            // Return if the error is fatal
+                            if (e2.IsFatal)
+                                return;
                         }
                     }
                 }

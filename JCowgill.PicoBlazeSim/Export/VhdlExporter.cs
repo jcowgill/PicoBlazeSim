@@ -72,7 +72,7 @@ namespace JCowgill.PicoBlazeSim.Export
 
         #region Vhdl Skeleton
 
-        private static readonly string VhdlSkeleton1 =
+        private const string VhdlSkeleton1 =
 @"--
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
@@ -110,10 +110,10 @@ ARCHITECTURE rom_data_arch OF {0} IS
     attribute INIT_0F : string;
 --";
 
-        private static readonly string VhdlSkeletonLine1 =
+        private const string VhdlSkeletonLine1 =
             "    attribute INIT_{0:X2} OF ram_256_x_16 : label IS  \"{1}\";";
 
-        private static readonly string VhdlSkeleton2 =
+        private const string VhdlSkeleton2 =
 @"--
 BEGIN
 --
@@ -121,10 +121,10 @@ BEGIN
     --translate_off
     GENERIC MAP (";
 
-        private static readonly string VhdlSkeletonLine2 =
+        private const string VhdlSkeletonLine2 =
             "        INIT_{0:X2} => X\"{1}\"{2}";
 
-        private static readonly string VhdlSkeleton3 =
+        private const string VhdlSkeleton3 =
 @"    --translate_on
     PORT MAP(
         dia => ""0000000000000000"",

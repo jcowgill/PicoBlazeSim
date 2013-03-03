@@ -124,7 +124,7 @@ namespace JCowgill.PicoBlazeSim.Import
         /// </summary>
         /// <param name="instruction">instruction to make from</param>
         /// <returns>the new ReturnInterrupt</returns>
-        protected ReturnInterrupt MakeReturnInterrupt(int instruction)
+        protected static ReturnInterrupt MakeReturnInterrupt(int instruction)
         {
             return new ReturnInterrupt((instruction & 1) == 1);
         }
@@ -134,7 +134,7 @@ namespace JCowgill.PicoBlazeSim.Import
         /// </summary>
         /// <param name="instruction">instruction to make from</param>
         /// <returns>the new SetInterruptFlag</returns>
-        protected SetInterruptFlag MakeSetInterruptFlag(int instruction)
+        protected static SetInterruptFlag MakeSetInterruptFlag(int instruction)
         {
             return new SetInterruptFlag((instruction & 1) == 1);
         }
@@ -569,7 +569,7 @@ namespace JCowgill.PicoBlazeSim.Import
                     return MakeShift(instruction);
             }
 
-            private SetRegisterBank MakeRegBank(int instruction)
+            private static SetRegisterBank MakeRegBank(int instruction)
             {
                 return new SetRegisterBank((instruction & 1) == 1);
             }
@@ -580,7 +580,7 @@ namespace JCowgill.PicoBlazeSim.Import
                                                     GetRegister2(instruction));
             }
 
-            private OutputConstant MakeOutputConstant(int instruction)
+            private static OutputConstant MakeOutputConstant(int instruction)
             {
                 return new OutputConstant((byte) (instruction >> 4), (byte) (instruction & 0xF));
             }

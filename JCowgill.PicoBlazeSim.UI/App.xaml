@@ -1,0 +1,13 @@
+﻿<Application x:Class="JCowgill.PicoBlazeSim.UI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:JCowgill.PicoBlazeSim.UI"
+             StartupUri="MainWindow.xaml">
+
+    <Application.Resources>
+        <!-- Boolean to Visibility Converter -->
+        <local:BooleanConverter x:Key="BooleanToVisibility"
+                                True="{x:Static Visibility.Visible}"
+                                False="{x:Static Visibility.Collapsed}" />
+    </Application.Resources>
+</Application>

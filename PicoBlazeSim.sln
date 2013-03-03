@@ -3,6 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JCowgill.PicoBlazeSim", "JCowgill.PicoBlazeSim\JCowgill.PicoBlazeSim.csproj", "{1F122145-59B4-444D-A43C-422019B446D5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{30FD31F0-8533-49F8-A7F6-3492A02DFB0F}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JCowgill.PicoBlazeSim.UI", "JCowgill.PicoBlazeSim.UI\JCowgill.PicoBlazeSim.UI.csproj", "{46714DBC-0F7A-4097-954D-53EB2879F33A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +22,10 @@ Global
 		{1F122145-59B4-444D-A43C-422019B446D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F122145-59B4-444D-A43C-422019B446D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F122145-59B4-444D-A43C-422019B446D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46714DBC-0F7A-4097-954D-53EB2879F33A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46714DBC-0F7A-4097-954D-53EB2879F33A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46714DBC-0F7A-4097-954D-53EB2879F33A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46714DBC-0F7A-4097-954D-53EB2879F33A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

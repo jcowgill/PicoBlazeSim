@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<SyntaxDefinition name="PicoBlaze"
+                  extensions=".psm"
+                  xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+
+    <!-- AvalonEdit syntax highlighting definition for PicoBlaze -->
+
+    <!-- Colours for classes of text -->
+    <Color name="Comment" foreground="Green" />
+    <Color name="Label" fontWeight="bold" />
+    <Color name="OpCode" foreground="Blue" />
+    <Color name="Directive" foreground="DarkBlue" />
+    <Color name="Register" foreground="DarkOrange" />
+
+    <RuleSet ignoreCase="true">
+
+        <!-- Single line comments -->
+        <Span color="Comment">
+            <Begin>;</Begin>
+        </Span>
+
+        <!-- Simple Rules -->
+        <Rule color="Label">^\s*[A-Z0-9_]+:</Rule>
+        <Rule color="Register">\bs[0-9]+\b</Rule>
+
+        <!-- PicoBlaze Opcodes -->
+        <Keywords color="OpCode">
+            <Word>ADD</Word>
+            <Word>ADDCY</Word>
+            <Word>AND</Word>
+            <Word>CALL Z</Word>
+            <Word>CALL NZ</Word>
+            <Word>CALL C</Word>
+            <Word>CALL NC</Word>
+            <Word>CALL@</Word>
+            <Word>CALL</Word>
+            <Word>COMPARE</Word>
+            <Word>COMPARECY</Word>
+            <Word>DISABLE INTERRUPT</Word>
+            <Word>ENABLE INTERRUPT</Word>
+            <Word>FETCH</Word>
+            <Word>HWBUILD</Word>
+            <Word>INPUT</Word>
+            <Word>JUMP Z</Word>
+            <Word>JUMP NZ</Word>
+            <Word>JUMP C</Word>
+            <Word>JUMP NC</Word>
+            <Word>JUMP@</Word>
+            <Word>JUMP</Word>
+            <Word><![CDATA[LOAD&RETURN]]></Word>
+            <Word>LOADRET</Word>
+            <Word>LOAD</Word>
+            <Word>OR</Word>
+            <Word>OUTPUT</Word>
+            <Word>OUTPUTK</Word>
+            <Word>REGBANK A</Word>
+            <Word>REGBANK B</Word>
+            <Word>RETURN Z</Word>
+            <Word>RETURN NZ</Word>
+            <Word>RETURN C</Word>
+            <Word>RETURN NC</Word>
+            <Word>RETURN</Word>
+            <Word>RETURNI ENABLE</Word>
+            <Word>RETURNI DISABLE</Word>
+            <Word>RL</Word>
+            <Word>RR</Word>
+            <Word>SL0</Word>
+            <Word>SL1</Word>
+            <Word>SLA</Word>
+            <Word>SLX</Word>
+            <Word>SR0</Word>
+            <Word>SR1</Word>
+            <Word>SRA</Word>
+            <Word>SRX</Word>
+            <Word>STAR</Word>
+            <Word>STORE</Word>
+            <Word>SUB</Word>
+            <Word>SUBCY</Word>
+            <Word>TEST</Word>
+            <Word>TESTCY</Word>
+            <Word>XOR</Word>
+        </Keywords>
+
+        <!-- Assembler Directives -->
+        <Keywords color="Directive">
+            <Word>CONSTANT</Word>
+            <Word>NAMEREG</Word>
+            <Word>ADDRESS</Word>
+        </Keywords>
+    </RuleSet>
+</SyntaxDefinition>

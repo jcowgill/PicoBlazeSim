@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Serialization;
 
 namespace JCowgill.PicoBlazeSim.Export
 {
@@ -10,6 +11,11 @@ namespace JCowgill.PicoBlazeSim.Export
     {
         public ExportException(string msg)
             : base(msg)
+        {
+        }
+
+        protected ExportException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
     }

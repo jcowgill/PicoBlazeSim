@@ -44,13 +44,25 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Export\AssemblyExporter.cs" />
+    <Compile Include="Export\VhdlExporter.cs" />
+    <Compile Include="Export\InstructionAssembler.cs" />
+    <Compile Include="Export\HexExporter.cs" />
+    <Compile Include="Export\DebugExporter.cs" />
+    <Compile Include="Export\IExporter.cs" />
+    <Compile Include="Export\ExportException.cs" />
+    <Compile Include="Import\AbstractImporter.cs" />
     <Compile Include="Import\AssemblyImporter.cs" />
+    <Compile Include="Import\AssemblyImporterState.cs" />
     <Compile Include="Import\AssemblyToken.cs" />
     <Compile Include="Import\AssemblyTokenizer.cs" />
     <Compile Include="Import\AssemblyTokenType.cs" />
+    <Compile Include="Import\HexImporter.cs" />
+    <Compile Include="Import\IImporter.cs" />
     <Compile Include="Import\ImportError.cs" />
     <Compile Include="Import\ImportErrorList.cs" />
     <Compile Include="Import\ImportException.cs" />
+    <Compile Include="Import\InstructionDisassembler.cs" />
     <Compile Include="Import\ProgramBuilder.cs" />
     <Compile Include="Instructions\Binary.cs" />
     <Compile Include="Instructions\BinaryConstant.cs" />
@@ -84,9 +96,6 @@
     <Compile Include="Simulation\SerialIoManager.cs" />
     <Compile Include="Simulation\SimulationException.cs" />
     <Compile Include="Simulation\SimulationStack.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Export\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

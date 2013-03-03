@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Serialization;
 
 namespace JCowgill.PicoBlazeSim.Simulation
 {
@@ -15,6 +16,11 @@ namespace JCowgill.PicoBlazeSim.Simulation
 
         public SimulationException(string msg, Exception inner)
             : base(msg, inner)
+        {
+        }
+
+        protected SimulationException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
     }

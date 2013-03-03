@@ -83,7 +83,7 @@ namespace JCowgill.PicoBlazeSim.Simulation
         /// <summary>
         /// The HwBuild constant (retrieved by the HwBuild instruction)
         /// </summary>
-        public byte HwBuild { get; private set; }
+        public byte HwBuild { get; set; }
 
         /// <summary>
         /// Gets the array of registers this simulator can use

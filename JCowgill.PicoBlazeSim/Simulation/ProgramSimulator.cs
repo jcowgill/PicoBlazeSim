@@ -260,7 +260,7 @@ namespace JCowgill.PicoBlazeSim.Simulation
         /// </summary>
         /// <param name="pc">program counter value to check</param>
         /// <returns>the wrapped around pc value</returns>
-        private short FixPcWraparound(int pc)
+        internal short FixPcWraparound(int pc)
         {
             if (pc < 0)
                 return (short) (Program.Instructions.Count - 1);
